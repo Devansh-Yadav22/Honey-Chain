@@ -1,0 +1,70 @@
+{
+  "name": "honeychain-org1",
+  "version": "1.0.0",
+  "client": {
+    "organization": "Org1",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "organizations": {
+    "Org1": {
+      "mspid": "Org1MSP",
+      "peers": ["peer0.org1.honeychain.local"],
+      "certificateAuthorities": ["ca.org1.honeychain.local"]
+    }
+  },
+  "peers": {
+    "peer0.org1.honeychain.local": {
+      "url": "grpcs://localhost:7051",
+      "tlsCACerts": {
+        "path": "network/organizations/peerOrganizations/org1.honeychain.local/tlsca/tlsca.org1.honeychain.local-cert.pem"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.org1.honeychain.local",
+        "hostnameOverride": "peer0.org1.honeychain.local"
+      }
+    }
+  },
+  "orderers": {
+    "orderer.honeychain.local": {
+      "url": "grpcs://localhost:7050",
+      "tlsCACerts": {
+        "path": "network/organizations/ordererOrganizations/honeychain.local/tlsca/tlsca.honeychain.local-cert.pem"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer.honeychain.local"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.org1.honeychain.local": {
+      "url": "https://localhost:7054",
+      "caName": "ca-org1",
+      "tlsCACerts": {
+        "path": "network/organizations/fabric-ca/org1/ca-cert.pem"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  },
+  "channels": {
+    "honeychannel": {
+      "orderers": ["orderer.honeychain.local"],
+      "peers": {
+        "peer0.org1.honeychain.local": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    }
+  }
+}

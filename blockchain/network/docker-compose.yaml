@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  ca.org1.honeychain.local:
+    image: hyperledger/fabric-ca:1.5.15
+    container_name: ca.org1.honeychain.local
+    environment:
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
+      FABRIC_CA_SERVER_CA_NAME: ca-org1
+      FABRIC_CA_SERVER_TLS_ENABLED: "true"
+      FABRIC_CA_SERVER_PORT: 7054
+      FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS: 0.0.0.0:17054
+    ports:
+      - "7054:7054"
+      - "17054:17054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./organizations/fabric-ca/org1:/etc/hyperledger/fabric-ca-server
+    networks:
+      - honeychain
+
+  orderer.honeychain.local:
+    image: hyperledger/fabric-orderer:2.5.16
+    container_name: orderer.honeychain.local
+    environment:
+      FABRIC_LOGGING_SPEC: INFO
+      ORDERER_GENERAL_LISTENADDRESS: 0.0.0.0
+      ORDERER_GENERAL_LISTENPORT: 7050
+      ORDERER_GENERAL_LOCALMSPID: OrdererMSP
+      ORDERER_GENERAL_LOCALMSPDIR: /var/hyperledger/orderer/msp
+      ORDERER_GENERAL_TLS_ENABLED: "true"
+      ORDERER_GENERAL_TLS_PRIVATEKEY: /var/hyperledger/orderer/tls/server.key
+      ORDERER_GENERAL_TLS_CERTIFICATE: /var/hyperledger/orderer/tls/server.crt
+      ORDERER_GENERAL_TLS_ROOTCAS: '[/var/hyperledger/orderer/tls/ca.crt]'
+      ORDERER_GENERAL_BOOTSTRAPMETHOD: none
+      ORDERER_CHANNELPARTICIPATION_ENABLED: "true"
+      ORDERER_ADMIN_TLS_ENABLED: "true"
+      ORDERER_ADMIN_TLS_CERTIFICATE: /var/hyperledger/orderer/tls/server.crt
+      ORDERER_ADMIN_TLS_PRIVATEKEY: /var/hyperledger/orderer/tls/server.key
+      ORDERER_ADMIN_TLS_ROOTCAS: '[/var/hyperledger/orderer/tls/ca.crt]'
+      ORDERER_ADMIN_TLS_CLIENTROOTCAS: '[/var/hyperledger/orderer/tls/ca.crt]'
+      ORDERER_ADMIN_LISTENADDRESS: 0.0.0.0:7053
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+    volumes:
+      - ./organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/msp:/var/hyperledger/orderer/msp
+      - ./organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls:/var/hyperledger/orderer/tls
+      - orderer.honeychain.local:/var/hyperledger/production/orderer
+    networks:
+      - honeychain
+
+  peer0.org1.honeychain.local:
+    image: hyperledger/fabric-peer:2.5.16
+    container_name: peer0.org1.honeychain.local
+    environment:
+      CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+      CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: honeychain_honeychain
+      FABRIC_LOGGING_SPEC: INFO
+      CORE_PEER_TLS_ENABLED: "true"
+      CORE_PEER_PROFILE_ENABLED: "false"
+      CORE_PEER_ID: peer0.org1.honeychain.local
+      CORE_PEER_ADDRESS: peer0.org1.honeychain.local:7051
+      CORE_PEER_LISTENADDRESS: 0.0.0.0:7051
+      CORE_PEER_CHAINCODEADDRESS: peer0.org1.honeychain.local:7052
+      CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+      CORE_PEER_GOSSIP_BOOTSTRAP: peer0.org1.honeychain.local:7051
+      CORE_PEER_GOSSIP_EXTERNALENDPOINT: peer0.org1.honeychain.local:7051
+      CORE_PEER_LOCALMSPID: Org1MSP
+      CORE_PEER_MSPCONFIGPATH: /etc/hyperledger/fabric/msp
+      CORE_PEER_TLS_CERT_FILE: /etc/hyperledger/fabric/tls/server.crt
+      CORE_PEER_TLS_KEY_FILE: /etc/hyperledger/fabric/tls/server.key
+      CORE_PEER_TLS_ROOTCERT_FILE: /etc/hyperledger/fabric/tls/ca.crt
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./organizations/peerOrganizations/org1.honeychain.local/peers/peer0.org1.honeychain.local/msp:/etc/hyperledger/fabric/msp
+      - ./organizations/peerOrganizations/org1.honeychain.local/peers/peer0.org1.honeychain.local/tls:/etc/hyperledger/fabric/tls
+      - peer0.org1.honeychain.local:/var/hyperledger/production
+    depends_on:
+      - orderer.honeychain.local
+    networks:
+      - honeychain
+
+volumes:
+  orderer.honeychain.local:
+  peer0.org1.honeychain.local:
+
+networks:
+  honeychain:
+    name: honeychain_honeychain
