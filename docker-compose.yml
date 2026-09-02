@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  # ── PostgreSQL Database ──────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: honeychain-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: honeychain
+      POSTGRES_PASSWORD: honeychain
+      POSTGRES_DB: honeychain
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # ── Backend (Node.js / Express) ──────────────
+  backend:
+    build: ./backend
+    container_name: honeychain-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://honeychain:honeychain@db:5432/honeychain
+      AI_SERVICE_URL: http://ai:8000
+    depends_on:
+      - db
+      - ai
+
+  # ── AI Service (Python / FastAPI) ────────────
+  ai:
+    build: ./ai
+    container_name: honeychain-ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+  # ── Frontend (React / Vite) ──────────────────
+  frontend:
+    build: ./frontend
+    container_name: honeychain-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_URL: http://localhost:5000/api
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

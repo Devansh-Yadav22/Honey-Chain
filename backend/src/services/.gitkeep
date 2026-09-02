@@ -1,0 +1,5 @@
+// Business logic & external service adapters
+// - blockchainService.ts (Fabric abstraction)
+// - aiService.ts (FastAPI client)
+// - telemetryService.ts
+// - batchService.ts

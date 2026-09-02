@@ -1,0 +1,2 @@
+# Saved model artifacts (.pkl, .pt, .h5)
+# These files are excluded from git via .gitignore
