@@ -1,0 +1,38 @@
+{
+  "hives": [
+    { "id": "HIVE-001", "beekeeperId": "BK-001", "location": { "lat": 28.6139, "lng": 77.2090, "address": "New Delhi Apiary #1" }, "status": "ACTIVE" },
+    { "id": "HIVE-002", "beekeeperId": "BK-001", "location": { "lat": 28.6150, "lng": 77.2100, "address": "New Delhi Apiary #2" }, "status": "ACTIVE" },
+    { "id": "HIVE-003", "beekeeperId": "BK-002", "location": { "lat": 30.7333, "lng": 76.7794, "address": "Chandigarh Apiary #1" }, "status": "WARNING" },
+    { "id": "HIVE-004", "beekeeperId": "BK-002", "location": { "lat": 30.7350, "lng": 76.7800, "address": "Chandigarh Apiary #2" }, "status": "ACTIVE" },
+    { "id": "HIVE-005", "beekeeperId": "BK-003", "location": { "lat": 31.6340, "lng": 74.8723, "address": "Amritsar Apiary #1" }, "status": "CRITICAL" }
+  ],
+  "batches": [
+    {
+      "id": "HC-2026-0001",
+      "harvestId": "HARVEST-001",
+      "quantity": 18.0,
+      "origin": "New Delhi Apiary #1 (HIVE-001)",
+      "status": "VERIFIED",
+      "blockchainTxId": "0x8f3c7e9a2b4d1056ef8a9c3b7e4f1a2d",
+      "blockchainStatus": "CONFIRMED"
+    },
+    {
+      "id": "HC-2026-0002",
+      "harvestId": "HARVEST-002",
+      "quantity": 25.0,
+      "origin": "New Delhi Apiary #2 (HIVE-002)",
+      "status": "VERIFIED",
+      "blockchainTxId": "0x9a4b5c6d7e8f90123456789abcdef012",
+      "blockchainStatus": "CONFIRMED"
+    },
+    {
+      "id": "HC-2026-0003",
+      "harvestId": "HARVEST-003",
+      "quantity": 31.0,
+      "origin": "Chandigarh Apiary #1 (HIVE-003)",
+      "status": "SUSPICIOUS",
+      "blockchainTxId": "0x123456789abcdef0123456789abcdef0",
+      "blockchainStatus": "CONFIRMED"
+    }
+  ]
+}
