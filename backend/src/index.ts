@@ -26,7 +26,7 @@ const app = express();
 const frontendUrl = process.env.FRONTEND_URL || '';
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: any, callback: any) => {
     if (!origin) return callback(null, true);
     if (
       !frontendUrl ||

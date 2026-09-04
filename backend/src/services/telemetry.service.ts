@@ -32,7 +32,7 @@ export async function getTelemetryByHiveId(hiveId: string, limit = 50): Promise<
   try {
     const res = await query('SELECT * FROM telemetry WHERE hive_id = $1 ORDER BY timestamp DESC LIMIT $2', [hiveId, limit]);
     if (res.rows.length > 0) {
-      return res.rows.map(r => ({
+      return res.rows.map((r: any) => ({
         id: r.id,
         hiveId: r.hive_id,
         temperature: parseFloat(r.temperature),

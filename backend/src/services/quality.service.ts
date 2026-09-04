@@ -25,7 +25,7 @@ export const qualityService = {
       query += ` ORDER BY created_at DESC`;
       const result = await pool.query(query, params);
       if (result.rows && result.rows.length > 0) {
-        return result.rows.map(row => ({
+        return result.rows.map((row: any) => ({
           id: row.id,
           batchId: row.batchId,
           labId: row.labId,

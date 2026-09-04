@@ -19,7 +19,7 @@ export async function getAllHives(): Promise<Hive[]> {
   try {
     const res = await query('SELECT * FROM hives ORDER BY created_at DESC');
     if (res.rows.length > 0) {
-      return res.rows.map(r => ({
+      return res.rows.map((r: any) => ({
         id: r.id,
         beekeeperId: r.beekeeper_id,
         location: typeof r.location === 'string' ? JSON.parse(r.location) : r.location,
