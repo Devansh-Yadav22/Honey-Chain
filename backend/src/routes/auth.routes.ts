@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { authController } from '../controllers/auth.controller';
+import { AuthController } from '../controllers/auth.controller';
 import { authenticate } from '../middleware/auth';
 
-export const authRouter = Router();
+const router = Router();
 
-authRouter.post('/login', authController.login);
-authRouter.get('/me', authenticate, authController.getProfile);
-authRouter.get('/users', authController.getUsers);
-authRouter.get('/organizations', authController.getOrganizations);
+router.post('/login', AuthController.login);
+router.post('/signup', AuthController.signup);
+router.get('/me', authenticate, AuthController.getMe);
+router.get('/demo-accounts', AuthController.getDemoAccounts);
+
+export default router;

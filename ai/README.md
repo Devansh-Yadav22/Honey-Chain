@@ -1,6 +1,6 @@
 # AI Service — Honey Chain
 
-Python + FastAPI service providing hive intelligence and provenance consistency analysis for Honey Chain (SIH26021).
+Python + FastAPI service providing hive intelligence and provenance consistency analysis for Honey Chain.
 
 ---
 

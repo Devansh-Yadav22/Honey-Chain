@@ -104,7 +104,9 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
               </div>
               <p className="text-xs text-stone-700 leading-relaxed font-medium">
                 {isSuspicious
-                  ? 'Recorded harvest quantity (18 kg) differs from observed batch quantity (31 kg). Evidence Engine flags potential volume adulteration.'
+                  ? (batch.harvest?.quantity 
+                      ? `Recorded harvest quantity (${batch.harvest.quantity} kg) differs from observed batch quantity (${batch.quantity} kg). AI Evidence Engine flags potential volume inflation/adulteration.`
+                      : 'Observed batch volume conflicts with recorded provenance evidence.')
                   : 'All recorded timestamps, IoT telemetry vectors, and quantities match harvest evidence.'}
               </p>
             </div>

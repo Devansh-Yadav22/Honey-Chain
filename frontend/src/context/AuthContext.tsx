@@ -1,142 +1,290 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Role, Organization } from '../types';
-import { getAuthUsers, getAuthOrganizations } from '../services/api';
+import { 
+  auth, 
+  signInWithEmailAndPassword, 
+  firebaseSignOut, 
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  FirebaseUser 
+} from '../config/firebase';
+import { 
+  getAuthUsers, 
+  getAuthOrganizations, 
+  setApiAuth, 
+  loginWithPassword 
+} from '../services/api';
 
 interface AuthContextType {
+  firebaseUser: FirebaseUser | null;
   currentUser: User | null;
+  applicationUser: User | null;
   currentRole: Role;
   currentOrg: Organization | null;
+  token: string | null;
+  loading: boolean;
+  isAuthenticated: boolean;
   availableUsers: User[];
   availableOrgs: Organization[];
-  switchRole: (role: Role) => void;
-  switchUser: (userId: string) => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
+  logout: () => void;
+  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const DEFAULT_USERS: User[] = [
   {
-    id: 'USR-ADMIN-01',
-    username: 'admin',
-    fullName: 'Vikramaditya Sharma',
-    email: 'admin@honeychain.gov.in',
+    id: 'usr-admin-01',
+    firebaseUid: 'fb-uid-admin-01',
+    name: 'Dr. Rajesh Sharma (Authority Admin)',
+    fullName: 'Dr. Rajesh Sharma (Authority Admin)',
+    email: 'admin@honeychain.demo',
     role: 'ADMIN',
-    organizationId: 'ORG-ADMIN',
-    organizationName: 'Honey Chain Central Operations',
+    organizationId: 'org-admin-01',
+    orgId: 'org-admin-01',
+    organizationName: 'Honey Chain National Authority',
     status: 'ACTIVE',
-    createdAt: '2025-01-01T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   },
   {
-    id: 'USR-BEE-01',
-    username: 'beekeeper_rajesh',
-    fullName: 'Rajesh Kumar Verma',
-    email: 'rajesh@himalayanbees.coop',
+    id: 'usr-beekeeper-01',
+    firebaseUid: 'fb-uid-beekeeper-01',
+    name: 'Ramesh Singh (Master Beekeeper)',
+    fullName: 'Ramesh Singh (Master Beekeeper)',
+    email: 'beekeeper@honeychain.demo',
     role: 'BEEKEEPER',
-    organizationId: 'ORG-BEE-01',
-    organizationName: 'Himalayan Apiary Cooperative',
+    organizationId: 'org-apiary-01',
+    orgId: 'org-apiary-01',
+    organizationName: 'Himalayan Pure Apiaries',
     status: 'ACTIVE',
-    createdAt: '2025-01-10T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   },
   {
-    id: 'USR-PROC-01',
-    username: 'processor_anita',
-    fullName: 'Anita Desai',
-    email: 'anita@nilgirihoney.in',
+    id: 'usr-processor-01',
+    firebaseUid: 'fb-uid-processor-01',
+    name: 'Anita Verma (Chief Processor)',
+    fullName: 'Anita Verma (Chief Processor)',
+    email: 'processor@honeychain.demo',
     role: 'PROCESSOR',
-    organizationId: 'ORG-PROC-01',
-    organizationName: 'Nilgiri Pure Extraction Ltd',
+    organizationId: 'org-proc-01',
+    orgId: 'org-proc-01',
+    organizationName: 'NectarPure Processing Facilities',
     status: 'ACTIVE',
-    createdAt: '2025-02-01T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   },
   {
-    id: 'USR-LOG-01',
-    username: 'transporter_gurdeep',
-    fullName: 'Gurdeep Singh',
-    email: 'gurdeep@bharatcoldchain.com',
+    id: 'usr-transporter-01',
+    firebaseUid: 'fb-uid-transporter-01',
+    name: 'Vikram Malhotra (Lead Logistics Officer)',
+    fullName: 'Vikram Malhotra (Lead Logistics Officer)',
+    email: 'transporter@honeychain.demo',
     role: 'TRANSPORTER',
-    organizationId: 'ORG-LOG-01',
-    organizationName: 'Bharat Cold-Chain Logistics',
+    organizationId: 'org-log-01',
+    orgId: 'org-log-01',
+    organizationName: 'ColdRoute Agro Logistics',
     status: 'ACTIVE',
-    createdAt: '2025-02-15T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   },
   {
-    id: 'USR-PACK-01',
-    username: 'packager_priya',
-    fullName: 'Priya Sundaram',
-    email: 'priya@pureflora.in',
+    id: 'usr-packager-01',
+    firebaseUid: 'fb-uid-packager-01',
+    name: 'Suresh Patel (Packaging Lead)',
+    fullName: 'Suresh Patel (Packaging Lead)',
+    email: 'packager@honeychain.demo',
     role: 'PACKAGER',
-    organizationId: 'ORG-PACK-01',
-    organizationName: 'PureFlora Packaging Hub',
+    organizationId: 'org-pack-01',
+    orgId: 'org-pack-01',
+    organizationName: 'EcoPack Honey Packaging Ltd',
     status: 'ACTIVE',
-    createdAt: '2025-03-01T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   },
   {
-    id: 'USR-LAB-01',
-    username: 'analyst_mehta',
-    fullName: 'Dr. Arishta Mehta',
-    email: 'dr.mehta@apexlabs.res.in',
+    id: 'usr-lab-01',
+    firebaseUid: 'fb-uid-lab-01',
+    name: 'Dr. Priya Nair (Senior Quality Analyst)',
+    fullName: 'Dr. Priya Nair (Senior Quality Analyst)',
+    email: 'lab@honeychain.demo',
     role: 'QUALITY_LAB',
-    organizationId: 'ORG-LAB-01',
-    organizationName: 'Apex Food Safety Labs (NABL)',
+    organizationId: 'org-lab-01',
+    orgId: 'org-lab-01',
+    organizationName: 'FSSAI Certified Apex Quality Labs',
     status: 'ACTIVE',
-    createdAt: '2025-03-10T00:00:00Z'
+    createdAt: '2026-01-01T00:00:00Z'
   }
 ];
 
 const DEFAULT_ORGS: Organization[] = [
-  { id: 'ORG-ADMIN', name: 'Honey Chain Central Operations', type: 'PLATFORM_ADMIN', location: 'New Delhi, India', contactEmail: 'ops@honeychain.gov.in', status: 'ACTIVE', createdAt: '2025-01-01T00:00:00Z' },
-  { id: 'ORG-BEE-01', name: 'Himalayan Apiary Cooperative', type: 'APIARY_COOPERATIVE', location: 'Kangra & Shimla, HP', contactEmail: 'contact@himalayanbees.coop', status: 'ACTIVE', createdAt: '2025-01-10T00:00:00Z' },
-  { id: 'ORG-PROC-01', name: 'Nilgiri Pure Extraction Ltd', type: 'PROCESSING_FACILITY', location: 'Coimbatore, TN', contactEmail: 'qa@nilgirihoney.in', status: 'ACTIVE', createdAt: '2025-02-01T00:00:00Z' },
-  { id: 'ORG-LOG-01', name: 'Bharat Cold-Chain Logistics', type: 'LOGISTICS_FLEET', location: 'New Delhi & Chandigarh', contactEmail: 'dispatch@bharatcoldchain.com', status: 'ACTIVE', createdAt: '2025-02-15T00:00:00Z' },
-  { id: 'ORG-PACK-01', name: 'PureFlora Packaging Hub', type: 'PACKAGING_PLANT', location: 'Okhla, New Delhi', contactEmail: 'bottling@pureflora.in', status: 'ACTIVE', createdAt: '2025-03-01T00:00:00Z' },
-  { id: 'ORG-LAB-01', name: 'Apex Food Safety Labs (NABL)', type: 'QUALITY_LABORATORY', location: 'Gurugram, Haryana', contactEmail: 'certificates@apexlabs.res.in', status: 'ACTIVE', createdAt: '2025-03-10T00:00:00Z' }
+  { id: 'org-admin-01', name: 'Honey Chain National Authority', type: 'ADMIN', location: 'New Delhi, India', contactEmail: 'admin@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'org-apiary-01', name: 'Himalayan Pure Apiaries', type: 'APIARY', location: 'Nainital, Uttarakhand', contactEmail: 'beekeeper@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'org-proc-01', name: 'NectarPure Processing Facilities', type: 'PROCESSOR', location: 'Haridwar, Uttarakhand', contactEmail: 'processor@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'org-log-01', name: 'ColdRoute Agro Logistics', type: 'LOGISTICS', location: 'Gurugram, Haryana', contactEmail: 'transporter@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'org-pack-01', name: 'EcoPack Honey Packaging Ltd', type: 'PACKAGING_FACILITY', location: 'Noida, Uttar Pradesh', contactEmail: 'packager@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' },
+  { id: 'org-lab-01', name: 'FSSAI Certified Apex Quality Labs', type: 'QUALITY_LAB', location: 'New Delhi', contactEmail: 'lab@honeychain.demo', status: 'ACTIVE', createdAt: '2026-01-01T00:00:00Z' }
 ];
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('honeychain_user');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return null;
+  });
+  const [token, setToken] = useState<string | null>(localStorage.getItem('honeychain_token'));
+  const [loading, setLoading] = useState<boolean>(true);
   const [availableUsers, setAvailableUsers] = useState<User[]>(DEFAULT_USERS);
   const [availableOrgs, setAvailableOrgs] = useState<Organization[]>(DEFAULT_ORGS);
-  const [currentUser, setCurrentUser] = useState<User | null>(DEFAULT_USERS[0]);
 
+  // Sync auth headers with API client
   useEffect(() => {
-    getAuthUsers().then(users => {
+    setApiAuth(currentUser, token || undefined);
+  }, [currentUser, token]);
+
+  // Initial fetch of users and organizations for admin/directory views
+  const refreshUserProfile = useCallback(async () => {
+    try {
+      const [users, orgs] = await Promise.all([
+        getAuthUsers(),
+        getAuthOrganizations()
+      ]);
       if (users && users.length > 0) setAvailableUsers(users);
-    });
-    getAuthOrganizations().then(orgs => {
       if (orgs && orgs.length > 0) setAvailableOrgs(orgs);
-    });
+    } catch (err) {
+      console.warn('Could not refresh directory data:', err);
+    }
   }, []);
 
-  const switchRole = (role: Role) => {
-    if (role === 'CONSUMER') {
-      setCurrentUser(null);
-      return;
-    }
-    const user = availableUsers.find(u => u.role === role) || DEFAULT_USERS.find(u => u.role === role);
-    if (user) {
-      setCurrentUser(user);
+  useEffect(() => {
+    refreshUserProfile();
+  }, [refreshUserProfile]);
+
+  // Firebase Auth State Listener across page reloads
+  useEffect(() => {
+    let isMounted = true;
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (!isMounted) return;
+      setFirebaseUser(fbUser);
+      if (fbUser) {
+        try {
+          const idToken = await fbUser.getIdToken();
+          setToken(idToken);
+          localStorage.setItem('honeychain_token', idToken);
+
+          // Resolve PostgreSQL user profile
+          const matchedUser = availableUsers.find(u => 
+            (fbUser.email && u.email.toLowerCase() === fbUser.email.toLowerCase()) ||
+            u.firebaseUid === fbUser.uid ||
+            u.id === fbUser.uid
+          );
+
+          if (matchedUser) {
+            setCurrentUser(matchedUser);
+            localStorage.setItem('honeychain_user', JSON.stringify(matchedUser));
+            setApiAuth(matchedUser, idToken);
+          }
+        } catch (err) {
+          console.warn('Error fetching ID token from Firebase user:', err);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [availableUsers]);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> => {
+    setLoading(true);
+    try {
+      let resolvedToken: string | null = null;
+      let appUser: User | null = null;
+
+      // 1. Try Firebase Web SDK Email/Password sign in
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (userCredential && userCredential.user) {
+          setFirebaseUser(userCredential.user);
+          resolvedToken = await userCredential.user.getIdToken();
+        }
+      } catch (fbErr: any) {
+        // Fallback to backend authentication if Firebase Client is operating in mock / test environment
+        console.info('Firebase Client login returned:', fbErr.message, 'Verifying with Backend Auth service...');
+      }
+
+      // 2. Authenticate against Backend API (verifies password & fetches PostgreSQL user profile)
+      const res = await loginWithPassword(email, password);
+      if (res && res.user) {
+        appUser = res.user;
+        const finalToken = resolvedToken || res.token || `test-token-${res.user.firebaseUid || res.user.id}`;
+
+        setToken(finalToken);
+        localStorage.setItem('honeychain_token', finalToken);
+        setCurrentUser(appUser);
+        localStorage.setItem('honeychain_user', JSON.stringify(appUser));
+        setApiAuth(appUser, finalToken);
+
+        setLoading(false);
+        return { success: true, user: appUser };
+      }
+
+      setLoading(false);
+      return { success: false, error: 'Invalid email or password' };
+    } catch (err: any) {
+      setLoading(false);
+      return { success: false, error: err.message || 'Authentication failed' };
     }
   };
 
-  const switchUser = (userId: string) => {
-    const user = availableUsers.find(u => u.id === userId);
-    if (user) {
-      setCurrentUser(user);
+  const logout = () => {
+    try {
+      firebaseSignOut(auth);
+    } catch (e) {}
+    setFirebaseUser(null);
+    setToken(null);
+    setCurrentUser(null);
+    localStorage.removeItem('honeychain_token');
+    localStorage.removeItem('honeychain_user');
+    setApiAuth(null);
+  };
+
+  const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (err: any) {
+      // Return clear error if email not found or client error
+      return { success: false, error: err.message || 'Failed to send password reset email' };
     }
   };
 
   const currentRole: Role = currentUser ? currentUser.role : 'CONSUMER';
-  const currentOrg = currentUser ? (availableOrgs.find(o => o.id === currentUser.organizationId) || null) : null;
+  const currentOrg = currentUser 
+    ? (availableOrgs.find(o => o.id === (currentUser.organizationId || currentUser.orgId)) || null) 
+    : null;
+  const isAuthenticated = currentUser !== null && currentUser.role !== 'CONSUMER';
 
   return (
     <AuthContext.Provider
       value={{
+        firebaseUser,
         currentUser,
+        applicationUser: currentUser,
         currentRole,
         currentOrg,
+        token,
+        loading,
+        isAuthenticated,
         availableUsers,
         availableOrgs,
-        switchRole,
-        switchUser
+        login,
+        logout,
+        resetPassword,
+        refreshUserProfile
       }}
     >
       {children}

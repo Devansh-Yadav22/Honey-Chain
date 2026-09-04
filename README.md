@@ -4,7 +4,7 @@
     <strong>Blockchain-backed honey traceability & smart beekeeping platform</strong>
   </p>
   <p align="center">
-    <em>SIH 2026 — Problem Statement SIH26021 | Team Bee-Tech</em>
+    <em>Team Bee-Tech</em>
   </p>
 </p>
 
@@ -96,7 +96,7 @@ HIVE → IoT Telemetry → AI Intelligence → HARVEST → BATCH → PROCESSING 
 | **Database** | PostgreSQL |
 | **AI Service** | Python, FastAPI, scikit-learn |
 | **Blockchain** | Hyperledger Fabric, Fabric CA/MSP |
-| **IoT** | Simulated telemetry (Phase 1) |
+| **IoT** | Multi-sensor telemetry simulation |
 | **Deployment** | Docker, Docker Compose |
 | **Communication** | REST APIs |
 
@@ -332,13 +332,13 @@ refactor: simplify blockchain service
 
 ## 👥 Team
 
-**Bee-Tech** — SIH 2026
+**Bee-Tech**
 
 ---
 
 ## 📄 License
 
-This project is part of the Smart India Hackathon 2026 submission.
+Proprietary / Open Source — Honey Chain Platform.
 
 ---
 

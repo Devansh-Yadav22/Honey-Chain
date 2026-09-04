@@ -8,11 +8,18 @@ export type Role =
   | 'CONSUMER';
 
 export type OrganizationType =
+  | 'APIARY'
   | 'APIARY_COOPERATIVE'
+  | 'PROCESSOR'
   | 'PROCESSING_FACILITY'
+  | 'LOGISTICS'
   | 'LOGISTICS_FLEET'
+  | 'PACKAGING_FACILITY'
   | 'PACKAGING_PLANT'
+  | 'QUALITY_LAB'
   | 'QUALITY_LABORATORY'
+  | 'REGULATOR'
+  | 'ADMIN'
   | 'PLATFORM_ADMIN';
 
 export interface Organization {
@@ -20,23 +27,126 @@ export interface Organization {
   name: string;
   type: OrganizationType;
   registrationNumber?: string;
-  location: string;
+  registrationNo?: string;
+  location?: string;
   contactEmail: string;
   contactPhone?: string;
-  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED';
+  address?: string;
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'REJECTED';
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface User {
   id: string;
-  username: string;
-  fullName: string;
+  firebaseUid?: string;
+  username?: string;
+  fullName?: string;
+  name: string; // Master display name
   email: string;
+  phone?: string;
+  passwordHash?: string;
   role: Role;
-  organizationId: string;
+  organizationId?: string;
+  orgId?: string;
   organizationName?: string;
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED' | 'DEACTIVATED' | 'REJECTED';
   createdAt: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface LocationRecord {
+  id: string;
+  batchId: string;
+  recordedBy?: string;
+  capturedBy?: string;
+  stage?: string;
+  resourceType?: 'HIVE' | 'BATCH' | 'SHIPMENT';
+  resourceId?: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  address?: string;
+  isMocked?: boolean;
+  timestamp?: string;
+  source?: 'BROWSER_GPS' | 'MANUAL' | 'SIMULATED';
+  createdAt: string;
+}
+
+export interface EvidenceRecord {
+  id: string;
+  batchId: string;
+  eventId?: string;
+  uploaderId?: string;
+  uploadedBy?: string;
+  uploaderName?: string;
+  organizationId?: string;
+  organizationName?: string;
+  fileType?: 'LAB_REPORT' | 'TRANSPORT_WAYBILL' | 'SEAL_IMAGE' | 'HARVEST_CERTIFICATE' | 'TEMPERATURE_LOG' | 'PACKAGING_MANIFEST' | string;
+  fileName: string;
+  filePath?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  sizeBytes?: number;
+  mimeType: string;
+  sha256?: string;
+  sha256Hash: string;
+  status?: 'UPLOADED' | 'VERIFIED' | 'REJECTED';
+  category?: 'HARVEST' | 'PROCESSING' | 'TRANSPORT' | 'PACKAGING' | 'LAB_ASSAY';
+  metadata?: Record<string, any>;
+  blockchainTxId?: string;
+  uploadedAt?: string;
+  createdAt: string;
+  notes?: string;
+}
+
+export interface Handoff {
+  id: string;
+  batchId: string;
+  senderId?: string;
+  receiverId?: string;
+  fromActorId?: string;
+  fromActorName?: string;
+  fromOrgId?: string;
+  fromOrgName?: string;
+  toActorId?: string;
+  toActorName?: string;
+  toOrgId?: string;
+  toOrgName?: string;
+  targetRole?: Role;
+  fromStage?: string;
+  toStage?: string;
+  quantity?: number;
+  unit?: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'DISPUTED';
+  disputeReason?: string;
+  reason?: string;
+  evidenceHashes?: string[];
+  location?: Location;
+  timestamp?: string;
+  createdAt: string;
+  resolvedAt?: string;
+}
+
+export interface Alert {
+  id: string;
+  batchId?: string;
+  type?: 'AI_ANOMALY' | 'LOCATION_MISMATCH' | 'QUANTITY_MISMATCH' | 'TIMESTAMP_INCONSISTENCY' | 'FAILED_BLOCKCHAIN' | 'FAILED_AI' | 'REJECTED_HANDOFF' | 'PENDING_APPROVAL' | string;
+  severity: 'INFO' | 'LOW' | 'MEDIUM' | 'HIGH' | 'WARNING' | 'CRITICAL';
+  category?: 'QUANTITY_DRIFT' | 'GEO_MISMATCH' | 'TIME_ANOMALY' | 'AI_ANOMALY' | 'UNVERIFIED_HANDOFF' | 'UNAUTHORIZED_ROLE' | string;
+  title?: string;
+  message: string;
+  resourceType?: string;
+  resourceId?: string;
+  organizationId?: string;
+  details?: Record<string, any>;
+  status: 'OPEN' | 'UNREAD' | 'READ' | 'ACKNOWLEDGED' | 'RESOLVED';
+  resolvedBy?: string;
+  resolutionNotes?: string;
+  createdAt: string;
+  readAt?: string;
+  resolvedAt?: string;
 }
 
 export interface Location {
@@ -109,6 +219,17 @@ export interface Harvest {
   createdAt?: string;
 }
 
+export interface QuantityInconsistency {
+  code: 'QUANTITY_INCONSISTENCY';
+  severity: 'HIGH' | 'CRITICAL';
+  stage: 'PROCESSING' | 'TRANSPORT' | 'PACKAGING' | 'BATCH_CREATION';
+  message: string;
+  expected: number;
+  actual: number;
+  difference: number;
+  unit: string;
+}
+
 export interface ProcessingEvent {
   id: string;
   batchId: string;
@@ -117,6 +238,7 @@ export interface ProcessingEvent {
   eventType: string; // e.g. 'INTAKE', 'MOISTURE_EXTRACTION', 'MICRO_FILTRATION', 'SETTLING'
   temperatureCelsius?: number;
   moisturePercent?: number;
+  inputWeightKg?: number;
   outputWeightKg?: number;
   details?: Record<string, any>;
   timestamp: string;
@@ -152,20 +274,24 @@ export interface QualityLabTest {
   batchId: string;
   labId: string;
   labName: string;
+  sampleId?: string;
   testerName: string;
   testDate: string;
   parameters: {
     moisturePercent: number; // Max 20% by FSSAI/Codex
     hmfMgPerKg: number;      // Max 40-80 mg/kg
     sucrosePercent: number;  // Max 5%
-    pollenCountPerGram: number;
+    c4SugarPercent?: number; // Max 7.0% by FSSAI
+    pollenCountPerGram: number; // Min 25,000
     antibioticResidue: 'NEGATIVE' | 'POSITIVE';
     leadPpm: number;
   };
   overallStatus: 'PASSED' | 'REVIEW_REQUIRED';
   certificateHashSha256: string;
   reportUrl?: string;
+  certificateRef?: string;
   notes?: string;
+  blockchainTxId?: string;
   createdAt: string;
 }
 
@@ -200,13 +326,14 @@ export interface Batch {
   origin: string;
   floralSource?: string;
   status: BatchStatus;
-  currentCustodian: string;
-  custodianRole: Role;
+  currentCustodian?: string;
+  custodianRole?: Role;
   blockchainTxId?: string;
   blockchainStatus?: 'PENDING' | 'CONFIRMED' | 'FAILED';
   createdAt?: string;
 
-  // Populated details
+  // Events & Populated details
+  events?: Array<{ eventType: string; timestamp: string; details?: any }>;
   harvest?: Harvest;
   processingEvents?: ProcessingEvent[];
   transportEvents?: TransportEvent[];
@@ -263,11 +390,15 @@ export interface AiHealthResponse {
   reasons?: string[];
 }
 
+export type AiHealth = AiHealthResponse;
+
 export interface AiAnomalyResponse {
   anomaly: boolean;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'WARNING' | 'CRITICAL' | 'NORMAL' | 'NONE';
   reasons: string[];
 }
+
+export type AiAnomaly = AiAnomalyResponse;
 
 export interface AiYieldResponse {
   predictedYieldKg: number;

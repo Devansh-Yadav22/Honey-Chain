@@ -1,6 +1,6 @@
 # IoT Simulator — Honey Chain
 
-Simulated hive telemetry generator for Honey Chain (SIH26021) providing realistic multi-sensor telemetry without requiring physical IoT hardware.
+Simulated hive telemetry generator for Honey Chain providing realistic multi-sensor telemetry without requiring physical IoT hardware.
 
 ---
 

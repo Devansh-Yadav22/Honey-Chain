@@ -1,6 +1,7 @@
 import { 
   Hive, TelemetryRecord, Batch, HoneyPassport, AiHealth, AiAnomaly, 
-  User, Organization, QualityLabTest, AuditLog, AdminException, SystemHealth, Role 
+  User, Organization, QualityLabTest, AuditLog, AdminException, SystemHealth, Role,
+  EvidenceRecord, Handoff, LocationRecord, Alert 
 } from '../types/index.js';
 
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
@@ -8,13 +9,13 @@ const API_BASE = (import.meta as any).env?.VITE_API_URL || `http://${hostname}:5
 
 let activeAuthHeaders: Record<string, string> = {};
 
-export function setApiAuth(user: User | null) {
+export function setApiAuth(user: User | null, token?: string) {
   if (user) {
     activeAuthHeaders = {
       'x-user-id': user.id,
       'x-role': user.role,
-      'x-org-id': user.organizationId,
-      'Authorization': `Bearer token-${user.id}`
+      'x-org-id': user.organizationId || user.orgId || '',
+      'Authorization': token ? `Bearer ${token}` : `Bearer token-${user.id}`
     };
   } else {
     activeAuthHeaders = {
@@ -32,7 +33,11 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T | nul
     };
 
     const res = await fetch(url, { ...options, headers });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      console.warn(`[API Client] ${options?.method || 'GET'} ${url} returned ${res.status}:`, errBody);
+      return null;
+    }
     const json = await res.json();
     return json.data !== undefined ? json.data : json;
   } catch (err) {
@@ -41,21 +46,172 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T | nul
   }
 }
 
-// ---------------- AUTH & ORGS ----------------
+// ---------------- AUTH & USER MGMT ----------------
 export async function getAuthUsers(): Promise<User[]> {
-  const data = await fetchJson<User[]>(`${API_BASE}/auth/users`);
+  const data = await fetchJson<User[]>(`${API_BASE}/users`);
   return data || [];
 }
 
-export async function getAuthOrganizations(): Promise<Organization[]> {
-  const data = await fetchJson<Organization[]>(`${API_BASE}/auth/organizations`);
+export async function getAuthOrganizations(status?: string): Promise<Organization[]> {
+  const url = status ? `${API_BASE}/organizations?status=${status}` : `${API_BASE}/organizations`;
+  const data = await fetchJson<Organization[]>(url);
   return data || [];
 }
 
-export async function loginApi(username: string): Promise<{ token: string; user: User } | null> {
-  return fetchJson<{ token: string; user: User }>(`${API_BASE}/auth/login`, {
+export async function updateOrganizationStatus(id: string, status: string): Promise<Organization | null> {
+  return fetchJson<Organization>(`${API_BASE}/organizations/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  });
+}
+
+export async function updateUserStatus(id: string, status: string): Promise<User | null> {
+  return fetchJson<User>(`${API_BASE}/users/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status })
+  });
+}
+
+export async function loginWithPassword(email: string, password: string): Promise<{ token: string; user: User; organization?: Organization } | null> {
+  return fetchJson<{ token: string; user: User; organization?: Organization }>(`${API_BASE}/auth/login`, {
     method: 'POST',
-    body: JSON.stringify({ username })
+    body: JSON.stringify({ email, password })
+  });
+}
+
+export async function signupWithPassword(data: any): Promise<{ token: string; user: User; organization?: Organization } | null> {
+  return fetchJson<{ token: string; user: User; organization?: Organization }>(`${API_BASE}/auth/signup`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function getDemoAccounts(): Promise<any[]> {
+  const data = await fetchJson<any[]>(`${API_BASE}/auth/demo-accounts`);
+  return data || [];
+}
+
+// ---------------- EVIDENCE MGMT (SHA-256) ----------------
+export async function uploadEvidenceFile(
+  batchId: string,
+  fileType: string,
+  file: File,
+  metadata: any = {}
+): Promise<EvidenceRecord | null> {
+  try {
+    const formData = new FormData();
+    formData.append('batchId', batchId);
+    formData.append('fileType', fileType);
+    formData.append('file', file);
+    formData.append('metadata', JSON.stringify(metadata));
+
+    const headers: Record<string, string> = { ...activeAuthHeaders };
+    delete (headers as any)['Content-Type']; // Let browser set boundary
+
+    const res = await fetch(`${API_BASE}/evidence/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.data || null;
+  } catch (err) {
+    console.warn('[API Client] Evidence upload failed:', err);
+    return null;
+  }
+}
+
+export async function getBatchEvidence(batchId: string): Promise<EvidenceRecord[]> {
+  const data = await fetchJson<EvidenceRecord[]>(`${API_BASE}/evidence/batch/${batchId}`);
+  return data || [];
+}
+
+export async function verifyEvidenceHash(id: string): Promise<{ valid: boolean; currentHash: string; recordedHash: string; reason?: string } | null> {
+  return fetchJson<{ valid: boolean; currentHash: string; recordedHash: string; reason?: string }>(`${API_BASE}/evidence/${id}/verify`);
+}
+
+// ---------------- GEOLOCATION TRACKING ----------------
+export async function recordLocationPoint(data: {
+  batchId: string;
+  stage: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  address?: string;
+  isMocked?: boolean;
+}): Promise<LocationRecord | null> {
+  return fetchJson<LocationRecord>(`${API_BASE}/locations`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function getBatchLocations(batchId: string): Promise<LocationRecord[]> {
+  const data = await fetchJson<LocationRecord[]>(`${API_BASE}/locations/batch/${batchId}`);
+  return data || [];
+}
+
+// ---------------- HANDOFFS & CUSTODY STATE MACHINE ----------------
+export async function initiateCustodyHandoff(data: {
+  batchId: string;
+  receiverId: string;
+  fromStage: string;
+  toStage: string;
+  quantity: number;
+  unit?: string;
+  evidenceHashes?: string[];
+  location?: { lat: number; lng: number; address?: string };
+}): Promise<Handoff | null> {
+  return fetchJson<Handoff>(`${API_BASE}/handoffs`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+export async function acceptCustodyHandoff(id: string): Promise<Handoff | null> {
+  return fetchJson<Handoff>(`${API_BASE}/handoffs/${id}/accept`, {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+}
+
+export async function rejectCustodyHandoff(id: string, disputeReason: string): Promise<Handoff | null> {
+  return fetchJson<Handoff>(`${API_BASE}/handoffs/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ disputeReason })
+  });
+}
+
+export async function getPendingHandoffs(): Promise<Handoff[]> {
+  const data = await fetchJson<Handoff[]>(`${API_BASE}/handoffs/pending`);
+  return data || [];
+}
+
+export async function getBatchHandoffs(batchId: string): Promise<Handoff[]> {
+  const data = await fetchJson<Handoff[]>(`${API_BASE}/handoffs/batch/${batchId}`);
+  return data || [];
+}
+
+// ---------------- CONSISTENCY ENGINE & ALERTS ----------------
+export async function getBatchConsistencyReport(batchId: string): Promise<any | null> {
+  return fetchJson<any>(`${API_BASE}/consistency/batch/${batchId}`);
+}
+
+export async function getSystemAlerts(status?: string, severity?: string): Promise<Alert[]> {
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (severity) params.append('severity', severity);
+  const qs = params.toString() ? `?${params.toString()}` : '';
+  const data = await fetchJson<Alert[]>(`${API_BASE}/alerts${qs}`);
+  return data || [];
+}
+
+export async function resolveSystemAlert(id: string, resolutionNotes: string): Promise<Alert | null> {
+  return fetchJson<Alert>(`${API_BASE}/alerts/${id}/resolve`, {
+    method: 'PATCH',
+    body: JSON.stringify({ resolutionNotes })
   });
 }
 
@@ -250,24 +406,30 @@ export async function publishBatchPassport(batchId: string): Promise<Batch | nul
 
 // ---------------- QUALITY / LAB ----------------
 export async function getQualityTests(batchId?: string): Promise<QualityLabTest[]> {
-  const url = batchId ? `${API_BASE}/quality?batchId=${batchId}` : `${API_BASE}/quality`;
+  const url = batchId ? `${API_BASE}/quality/tests/${batchId}` : `${API_BASE}/quality/tests`;
   const data = await fetchJson<QualityLabTest[]>(url);
   return data || [];
 }
 
 export async function recordQualityTest(data: {
   batchId: string;
+  sampleId?: string;
+  labName?: string;
+  testerName?: string;
+  certificateRef?: string;
+  reportUrl?: string;
   parameters: {
     moisturePercent: number;
     hmfMgPerKg: number;
     sucrosePercent: number;
+    c4SugarPercent?: number;
     pollenCountPerGram: number;
     antibioticResidue: 'NEGATIVE' | 'POSITIVE';
     leadPpm: number;
   };
   notes?: string;
 }): Promise<QualityLabTest | null> {
-  return fetchJson<QualityLabTest>(`${API_BASE}/quality`, {
+  return fetchJson<QualityLabTest>(`${API_BASE}/quality/tests`, {
     method: 'POST',
     body: JSON.stringify(data)
   });
@@ -278,9 +440,11 @@ export async function getAdminOverview(): Promise<{ metrics: any; recentActivity
   return fetchJson<{ metrics: any; recentActivity: AuditLog[] }>(`${API_BASE}/admin/overview`);
 }
 
-export async function getAdminAuditLogs(limit: number = 50): Promise<AuditLog[]> {
-  const data = await fetchJson<AuditLog[]>(`${API_BASE}/admin/audit?limit=${limit}`);
-  return data || [];
+export async function getAdminAuditLogs(limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+  const data = await fetchJson<AuditLog[]>(`${API_BASE}/audit/logs?limit=${limit}&offset=${offset}`);
+  if (data && data.length > 0) return data;
+  const legacyData = await fetchJson<AuditLog[]>(`${API_BASE}/admin/audit?limit=${limit}`);
+  return legacyData || [];
 }
 
 export async function getAdminExceptions(): Promise<AdminException[]> {

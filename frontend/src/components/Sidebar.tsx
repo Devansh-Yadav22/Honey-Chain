@@ -2,9 +2,10 @@ import React from 'react';
 import { 
   LayoutDashboard, Hexagon, Package, QrCode, 
   Settings, Truck, FlaskConical, Shield, Feather,
-  PlayCircle
+  PlayCircle, Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { Role } from '../types';
 
 interface SidebarProps {
   currentTab: string;
@@ -12,9 +13,9 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabSelect }) => {
-  const { currentRole } = useAuth();
+  const { currentRole, isAuthenticated } = useAuth();
 
-  const participantPortals = [
+  const participantPortals: Array<{ id: string; label: string; icon: any; role: Role }> = [
     { id: 'admin', label: 'Admin Command', icon: Shield, role: 'ADMIN' },
     { id: 'beekeeper', label: 'Beekeeper Workspace', icon: Feather, role: 'BEEKEEPER' },
     { id: 'processor', label: 'Processing Facility', icon: Settings, role: 'PROCESSOR' },
@@ -64,7 +65,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabSelect }) => 
             {participantPortals.map((item) => {
               const Icon = item.icon;
               const active = currentTab === item.id;
-              const isUserRole = currentRole === item.role;
+              const isUserRole = isAuthenticated && currentRole === item.role;
+              const isPermitted = isAuthenticated && (currentRole === 'ADMIN' || currentRole === item.role);
+
               return (
                 <button
                   key={item.id}
@@ -72,16 +75,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabSelect }) => 
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                     active
                       ? 'bg-amber-100 text-amber-950 font-bold border border-amber-300 shadow-xs'
+                      : isUserRole
+                      ? 'bg-white text-stone-900 font-semibold border border-amber-200/60 hover:bg-amber-50/50'
                       : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100/70'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
-                    <Icon className={`w-4 h-4 ${active ? 'text-amber-800' : 'text-stone-400'}`} />
+                    <Icon className={`w-4 h-4 ${active ? 'text-amber-800' : isUserRole ? 'text-amber-700' : 'text-stone-400'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isUserRole && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
-                  )}
+
+                  {isUserRole ? (
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
+                      YOUR ROLE
+                    </span>
+                  ) : !isPermitted ? (
+                    <Lock className="w-3 h-3 text-stone-300" />
+                  ) : null}
                 </button>
               );
             })}
@@ -138,13 +148,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentTab, onTabSelect }) => 
             </button>
           </div>
         </div>
-      </div>
-
-      <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 text-[11px] text-amber-950">
-        <p className="font-bold text-amber-900">Core Guarantee</p>
-        <p className="mt-0.5 text-amber-900/80 leading-snug">
-          Fabric preserves recorded events. IsolationForest checks physical evidence consistency.
-        </p>
       </div>
     </aside>
   );

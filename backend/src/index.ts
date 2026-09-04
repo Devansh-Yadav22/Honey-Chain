@@ -4,7 +4,15 @@ import { config } from './config/env';
 import { initDb } from './db/init';
 import { errorHandler } from './middleware/error';
 
-import { authRouter } from './routes/auth.routes';
+import authRoutes from './routes/auth.routes';
+import organizationRoutes from './routes/organization.routes';
+import userRoutes from './routes/user.routes';
+import evidenceRoutes from './routes/evidence.routes';
+import handoffRoutes from './routes/handoff.routes';
+import locationRoutes from './routes/location.routes';
+import alertRoutes from './routes/alert.routes';
+import consistencyRoutes from './routes/consistency.routes';
+import auditRoutes from './routes/audit.routes';
 import hiveRoutes from './routes/hive.routes';
 import telemetryRoutes from './routes/telemetry.routes';
 import { batchRouter } from './routes/batch.routes';
@@ -29,13 +37,22 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     service: 'honey-chain-backend',
+    tier: 'Tier 1 & Tier 2 Production Engine',
     timestamp: new Date().toISOString(),
     env: config.env,
   });
 });
 
 // Mount domain routes
-app.use('/api/auth', authRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/evidence', evidenceRoutes);
+app.use('/api/handoffs', handoffRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/consistency', consistencyRoutes);
+app.use('/api/audit', auditRoutes);
 app.use('/api/hives', hiveRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/batches', batchRouter);
@@ -47,11 +64,19 @@ app.use('/api/provenance', provenanceRoutes);
 // Base API route
 app.get('/api', (_req, res) => {
   res.json({
-    message: 'Welcome to Honey Chain Production API Server (Phase 2)',
-    version: '2.0.0',
+    message: 'Welcome to Honey Chain Production API Server (Tier 1 & Tier 2 Full Stack)',
+    version: '2.1.0',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
+      organizations: '/api/organizations',
+      users: '/api/users',
+      evidence: '/api/evidence',
+      handoffs: '/api/handoffs',
+      locations: '/api/locations',
+      alerts: '/api/alerts',
+      consistency: '/api/consistency/batch/:batchId',
+      audit: '/api/audit/logs',
       hives: '/api/hives',
       telemetry: '/api/telemetry',
       batches: '/api/batches',

@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Hive, Batch, TelemetryRecord, AiAnomaly, AiHealth } from '../types';
-import { getHives, getBatches, createBatch, getHiveTelemetry, getHiveHealth, getHiveAnomalies } from '../services/api';
+import { 
+  getHives, 
+  getBatches, 
+  createBatch, 
+  getHiveTelemetry, 
+  getHiveHealth, 
+  getHiveAnomalies, 
+  recordLocationPoint, 
+  initiateCustodyHandoff, 
+  getAuthUsers 
+} from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 import { TelemetryChart } from '../components/TelemetryChart';
-import { PlusCircle, Radio, AlertTriangle, ShieldCheck, MapPin, Feather } from 'lucide-react';
+import { PlusCircle, AlertTriangle, MapPin, Navigation, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => void }> = ({ onNavigateToBatch }) => {
+  const { currentUser } = useAuth();
   const [hives, setHives] = useState<Hive[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [selectedHiveId, setSelectedHiveId] = useState<string>('HIVE-001');
@@ -20,6 +32,13 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
   const [floralSource, setFloralSource] = useState('Mustard Blossom');
   const [notes, setNotes] = useState('First seasonal harvest, clear amber honey');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // GPS State
+  const [gpsLat, setGpsLat] = useState<number>(30.0668);
+  const [gpsLng, setGpsLng] = useState<number>(79.0193);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number>(5.0);
+  const [gpsStatus, setGpsStatus] = useState<string>('Ready for capture');
+  const [isCapturingGps, setIsCapturingGps] = useState<boolean>(false);
 
   useEffect(() => {
     loadData();
@@ -39,6 +58,29 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
     setBatches(bList);
   };
 
+  const captureBrowserGps = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus('Geolocation not supported by browser. Using apiary fallback.');
+      return;
+    }
+    setIsCapturingGps(true);
+    setGpsStatus('Requesting high-accuracy GPS coordinates...');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLat(pos.coords.latitude);
+        setGpsLng(pos.coords.longitude);
+        setGpsAccuracy(pos.coords.accuracy);
+        setGpsStatus(`GPS Captured: ${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)} (±${pos.coords.accuracy.toFixed(1)}m)`);
+        setIsCapturingGps(false);
+      },
+      (err) => {
+        setGpsStatus(`GPS capture failed (${err.message}). Defaulted to apiary coordinates.`);
+        setIsCapturingGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
   const handleCreateHarvestBatch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -52,11 +94,39 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
       hiveId: harvestHiveId
     });
 
-    setIsSubmitting(false);
-    setShowModal(false);
     if (newBatch) {
-      loadData();
+      // Record GPS location point
+      await recordLocationPoint({
+        batchId: newBatch.id,
+        stage: 'HARVEST',
+        latitude: gpsLat,
+        longitude: gpsLng,
+        accuracy: gpsAccuracy,
+        address: originStr,
+        isMocked: false
+      });
+
+      // Find processor user to initiate custody handoff
+      const users = await getAuthUsers();
+      const processor = users.find(u => u.role === 'PROCESSOR');
+      if (processor && currentUser) {
+        await initiateCustodyHandoff({
+          batchId: newBatch.id,
+          receiverId: processor.id,
+          fromStage: 'HARVEST',
+          toStage: 'PROCESSING',
+          quantity: parseFloat(quantity),
+          unit: 'kg',
+          location: { lat: gpsLat, lng: gpsLng, address: originStr }
+        });
+      }
+
+      await loadData();
+      setIsSubmitting(false);
+      setShowModal(false);
       if (onNavigateToBatch) onNavigateToBatch(newBatch.id);
+    } else {
+      setIsSubmitting(false);
     }
   };
 
@@ -72,12 +142,15 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
             <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Beekeeper Workspace</h1>
           </div>
           <p className="text-xs text-stone-600 mt-1">
-            Himalayan Apiary Cooperative • Monitor colony thermodynamics, AI alerts, and log new honey harvests.
+            Himalayan Pure Apiaries • Monitor colony thermodynamics, AI alerts, and log new honey harvests with GPS coordinates.
           </p>
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            captureBrowserGps();
+            setShowModal(true);
+          }}
           className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
         >
           <PlusCircle className="w-4 h-4 mr-1.5" /> Record Harvest & Create Batch
@@ -146,7 +219,7 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     <AlertTriangle className="w-4 h-4 mr-1.5 text-rose-700" /> AI Anomaly Detected ({anomalies.severity})
                   </p>
                   <ul className="list-disc list-inside text-stone-700 text-[11px] pl-1">
-                    {anomalies.reasons.map((r, i) => (
+                    {anomalies.reasons.map((r: string, i: number) => (
                       <li key={i}>{r}</li>
                     ))}
                   </ul>
@@ -166,7 +239,7 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
       {/* Harvest Batches Created by Beekeeper */}
       <div className="bg-white border border-[#EAE3D9] rounded-xl p-5 space-y-4">
         <h2 className="text-sm font-bold text-stone-900 tracking-tight">
-          Apiary Harvest Batches & Chain-of-Custody
+          Apiary Harvest Batches & Chain-of-Custody Handoffs
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
@@ -196,9 +269,9 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     {onNavigateToBatch && (
                       <button
                         onClick={() => onNavigateToBatch(batch.id)}
-                        className="text-amber-700 hover:text-amber-800 font-semibold hover:underline"
+                        className="text-amber-700 hover:text-amber-800 font-semibold hover:underline inline-flex items-center"
                       >
-                        Inspect →
+                        Inspect <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                       </button>
                     )}
                   </td>
@@ -258,6 +331,35 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 />
               </div>
 
+              {/* Browser GPS Capture Block */}
+              <div className="p-3 bg-stone-50 border border-stone-200 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-stone-800 flex items-center">
+                    <Navigation className="w-3.5 h-3.5 mr-1 text-amber-700" /> GPS Geolocation
+                  </span>
+                  <button
+                    type="button"
+                    onClick={captureBrowserGps}
+                    disabled={isCapturingGps}
+                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 underline"
+                  >
+                    {isCapturingGps ? 'Capturing...' : 'Re-capture GPS'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+                  <div>
+                    <span className="text-stone-500">Lat:</span> {gpsLat.toFixed(5)}
+                  </div>
+                  <div>
+                    <span className="text-stone-500">Lng:</span> {gpsLng.toFixed(5)}
+                  </div>
+                </div>
+                <p className="text-[10px] text-stone-500 flex items-center">
+                  <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+                  {gpsStatus}
+                </p>
+              </div>
+
               <div>
                 <label className="block text-stone-600 font-medium mb-1">Field Notes / Extraction Details</label>
                 <textarea
@@ -281,7 +383,7 @@ export const BeekeeperPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                   disabled={isSubmitting}
                   className="px-4 py-1.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-lg shadow-sm"
                 >
-                  {isSubmitting ? 'Recording on Fabric...' : 'Sign & Submit Batch'}
+                  {isSubmitting ? 'Recording on Fabric & Custody Queue...' : 'Sign, Log GPS & Create Batch'}
                 </button>
               </div>
             </form>

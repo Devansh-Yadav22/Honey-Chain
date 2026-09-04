@@ -1,7 +1,7 @@
 """
 Honey Chain AI Service — entrypoint.
 
-Bee-Tech | SIH26021 | Phase 1
+Bee-Tech | Honey Chain
 
 Hive intelligence, anomaly detection, productivity estimation, and
 provenance consistency checks.
@@ -20,7 +20,7 @@ app = FastAPI(
     title="Honey Chain AI Service",
     description=(
         "Hive intelligence and provenance consistency engine for the "
-        "Honey Chain platform (SIH26021). Identifies anomalies and "
+        "Honey Chain platform. Identifies anomalies and "
         "inconsistencies in evidence — does not claim to prove honey "
         "purity or prevent adulteration."
     ),

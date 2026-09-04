@@ -1,7 +1,10 @@
-import { Batch, Harvest, ProcessingEvent, TransportEvent, PackagingEvent, BatchStatus, Role } from '../types';
+import { Batch, Harvest, ProcessingEvent, TransportEvent, PackagingEvent, BatchStatus, Role, QuantityInconsistency } from '../types';
 import { store, memoryStore } from './store';
 import { blockchainService } from './blockchain.service';
 import { aiService } from './ai.service';
+import { ConsistencyService } from './consistency.service';
+import { AlertService } from './alert.service';
+import { query } from '../config/database';
 
 export async function createBatch(data: { 
   harvestId?: string; 
@@ -14,13 +17,16 @@ export async function createBatch(data: {
   actorId?: string;
   actorName?: string;
 }): Promise<Batch> {
-  const batchId = data.id || `HC-2026-000${memoryStore.batches.size + 1}`;
+  const nextNum = memoryStore.batches.size + 1;
+  const padded = String(nextNum).padStart(4, '0');
+  const batchId = data.id || `HC-2026-${padded}`;
 
+  let harvestId = data.harvestId;
   let harvest: Harvest | undefined;
   let status: BatchStatus = 'HARVESTED';
 
-  if (data.harvestId) {
-    harvest = memoryStore.harvests.get(data.harvestId);
+  if (harvestId) {
+    harvest = memoryStore.harvests.get(harvestId);
     if (harvest) {
       const check = await aiService.checkProvenanceConsistency({
         batchId,
@@ -31,14 +37,29 @@ export async function createBatch(data: {
         status = 'SUSPICIOUS';
       }
     }
+  } else {
+    // Record harvest base record
+    harvestId = `HARVEST-${padded}`;
+    harvest = {
+      id: harvestId,
+      hiveId: data.hiveId || 'HIVE-001',
+      beekeeperId: data.beekeeperId || 'BK-001',
+      harvestDate: new Date().toISOString(),
+      quantity: data.quantity,
+      floralSource: data.floralSource || 'Mustard Blossom',
+      moisturePercent: 18.0,
+      location: { lat: 28.6139, lng: 77.2090 },
+      notes: 'Logged via beekeeper workspace'
+    };
+    memoryStore.harvests.set(harvestId, harvest);
   }
 
-  const tx = await blockchainService.createBatch(batchId, data.harvestId || 'N/A', data.quantity, data.origin);
+  const tx = await blockchainService.createBatch(batchId, harvestId, data.quantity, data.origin);
 
   const newBatch: Batch = {
     id: batchId,
-    harvestId: data.harvestId,
-    hiveId: data.hiveId || harvest?.hiveId,
+    harvestId,
+    hiveId: data.hiveId || harvest?.hiveId || 'HIVE-001',
     beekeeperId: data.beekeeperId || harvest?.beekeeperId || 'BK-001',
     quantity: data.quantity,
     origin: data.origin,
@@ -53,6 +74,26 @@ export async function createBatch(data: {
   };
 
   store.addBatch(newBatch);
+
+  try {
+    await query(
+      `INSERT INTO batches (id, harvest_id, quantity, origin, status, blockchain_tx_id, blockchain_status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (id) DO UPDATE SET quantity = EXCLUDED.quantity, status = EXCLUDED.status`,
+      [
+        batchId,
+        data.harvestId || null,
+        data.quantity,
+        data.origin,
+        status,
+        tx.txId,
+        tx.status,
+        newBatch.createdAt
+      ]
+    );
+  } catch (err: any) {
+    console.warn('[Batch Service] PostgreSQL insert notice:', err.message);
+  }
 
   // Add audit log
   store.addAuditLog({
@@ -125,11 +166,26 @@ export async function addProcessingEvent(
     processorName?: string;
     temperatureCelsius?: number;
     moisturePercent?: number;
+    inputWeightKg?: number;
     outputWeightKg?: number;
+    quantityKg?: number;
     actorName?: string;
     [key: string]: any;
   }
-): Promise<ProcessingEvent> {
+): Promise<{ event: ProcessingEvent; inconsistency?: QuantityInconsistency }> {
+  const batch = store.getBatchById(batchId);
+  const previousQuantity = batch?.harvest?.quantity || batch?.quantity || 24.5;
+  const outputWeightKg = details?.outputWeightKg !== undefined ? Number(details.outputWeightKg) : (details?.quantityKg !== undefined ? Number(details.quantityKg) : previousQuantity);
+  const inputWeightKg = details?.inputWeightKg !== undefined ? Number(details.inputWeightKg) : previousQuantity;
+
+  // Validate Quantity Consistency across Harvest/Batch -> Processing
+  const qtyCheck = ConsistencyService.validateStageQuantity(
+    previousQuantity,
+    outputWeightKg,
+    'PROCESSING',
+    'Processing'
+  );
+
   const event: ProcessingEvent = {
     id: `PROC-${Date.now()}`,
     batchId,
@@ -138,30 +194,91 @@ export async function addProcessingEvent(
     eventType,
     temperatureCelsius: details?.temperatureCelsius,
     moisturePercent: details?.moisturePercent,
-    outputWeightKg: details?.outputWeightKg,
-    details,
+    inputWeightKg,
+    outputWeightKg,
+    details: {
+      ...details,
+      outputWeightKg,
+      inputWeightKg
+    },
     timestamp: new Date().toISOString()
   };
 
   store.addProcessingEvent(event);
-  store.updateBatchStatus(batchId, 'PROCESSING', details?.processorName || 'Nilgiri Pure Extraction Ltd', 'PROCESSOR');
 
-  await blockchainService.addProcessingEvent(batchId, processorId, eventType, details);
+  if (outputWeightKg !== undefined && !isNaN(outputWeightKg)) {
+    store.updateBatchQuantity(batchId, outputWeightKg);
+  }
 
-  store.addAuditLog({
-    actorId: processorId,
-    actorName: details?.actorName || 'Anita Desai',
-    role: 'PROCESSOR',
-    organizationId: processorId,
-    organizationName: details?.processorName || 'Nilgiri Pure Extraction Ltd',
-    action: 'PROCESSING_RECORDED',
-    resourceType: 'BATCH',
-    resourceId: batchId,
-    result: 'SUCCESS',
-    details: { eventType, tempC: details?.temperatureCelsius }
-  });
+  if (qtyCheck.isInconsistency && qtyCheck.inconsistency) {
+    // Volume inflation anomaly detected! Mark batch as SUSPICIOUS!
+    store.updateBatchStatus(batchId, 'SUSPICIOUS', details?.processorName || 'Nilgiri Pure Extraction Ltd', 'PROCESSOR');
 
-  return event;
+    // 1. Create Alert
+    await AlertService.createAlert(
+      batchId,
+      qtyCheck.inconsistency.severity,
+      'QUANTITY_DRIFT',
+      qtyCheck.inconsistency.message,
+      qtyCheck.inconsistency
+    );
+
+    // 2. Add Exception in store
+    store.addException({
+      id: `EXC-${Date.now()}`,
+      type: 'PROVENANCE_MISMATCH',
+      severity: 'CRITICAL',
+      title: 'Batch Volume Inflation Flagged',
+      description: qtyCheck.inconsistency.message,
+      resourceId: batchId,
+      resourceType: 'BATCH',
+      status: 'OPEN',
+      createdAt: new Date().toISOString()
+    });
+
+    // 3. Log Audit
+    store.addAuditLog({
+      actorId: processorId,
+      actorName: details?.actorName || 'Anita Desai',
+      role: 'PROCESSOR',
+      organizationId: processorId,
+      organizationName: details?.processorName || 'Nilgiri Pure Extraction Ltd',
+      action: 'QUANTITY_INCONSISTENCY_FLAGGED',
+      resourceType: 'BATCH',
+      resourceId: batchId,
+      result: 'WARNING',
+      details: qtyCheck.inconsistency
+    });
+  } else {
+    // Normal nominal progression
+    store.updateBatchStatus(batchId, 'PROCESSING', details?.processorName || 'Nilgiri Pure Extraction Ltd', 'PROCESSOR');
+
+    store.addAuditLog({
+      actorId: processorId,
+      actorName: details?.actorName || 'Anita Desai',
+      role: 'PROCESSOR',
+      organizationId: processorId,
+      organizationName: details?.processorName || 'Nilgiri Pure Extraction Ltd',
+      action: 'PROCESSING_RECORDED',
+      resourceType: 'BATCH',
+      resourceId: batchId,
+      result: 'SUCCESS',
+      details: { eventType, tempC: details?.temperatureCelsius, outputWeightKg }
+    });
+  }
+
+  // Anchor to blockchain
+  try {
+    await blockchainService.addProcessingEvent(batchId, processorId, eventType, {
+      ...details,
+      outputWeightKg,
+      inputWeightKg
+    });
+  } catch (e: any) {
+    console.warn('[Batch Service] Fabric processing event notice:', e.message);
+  }
+
+  return { event, inconsistency: qtyCheck.inconsistency };
 }
 
 export async function markReadyForTransport(
@@ -321,3 +438,16 @@ export async function publishPassport(
 
   return store.getBatchById(batchId) || null;
 }
+
+export const BatchService = {
+  createBatch,
+  getAllBatches,
+  getBatchById,
+  recordIntake,
+  addProcessingEvent,
+  markReadyForTransport,
+  addTransportEvent,
+  confirmTransportReceipt,
+  addPackagingEvent,
+  publishPassport
+};

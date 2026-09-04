@@ -1,53 +1,108 @@
 import { Request, Response, NextFunction } from 'express';
 import { Role, User } from '../types';
-import { store } from '../services/store';
+import { UserService } from '../services/user.service';
+import { verifyFirebaseIdToken } from '../config/firebase';
 
 export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
 /**
- * Authentication Middleware: Resolves user identity from Bearer token or fast-switch headers.
+ * Authentication Middleware:
+ * Extracts Bearer token, verifies Firebase ID token via Firebase Admin SDK,
+ * resolves PostgreSQL user by firebase_uid, checks account status, and attaches user to request.
  */
-export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  // 1. Check x-user-id or x-role header (useful for rapid UI role switching and automated testing)
-  const headerUserId = req.headers['x-user-id'] as string;
-  const headerRole = req.headers['x-role'] as Role;
-
-  if (headerUserId) {
-    const user = store.getUserById(headerUserId);
-    if (user) {
-      req.user = user;
+export async function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Unauthenticated request - continue without attaching req.user
       return next();
     }
-  }
 
-  if (headerRole) {
-    const user = store.getUsersByRole(headerRole)[0];
-    if (user) {
+    const token = authHeader.substring(7).trim();
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid authorization header format',
+      });
+    }
+
+    try {
+      // 1. Verify Firebase ID Token
+      const decoded = await verifyFirebaseIdToken(token);
+      if (!decoded || !decoded.uid) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid or expired authorization token',
+        });
+      }
+
+      // 2. Resolve PostgreSQL Application User by Firebase UID
+      let user = await UserService.getByFirebaseUid(decoded.uid);
+
+      // Fallback: If user not yet mapped by firebaseUid, look up by email from verified token
+      if (!user && decoded.email) {
+        user = await UserService.getByEmail(decoded.email);
+        if (user) {
+          // Link Firebase UID to existing user
+          await UserService.linkFirebaseUid(user.id, decoded.uid);
+          user.firebaseUid = decoded.uid;
+        }
+      }
+
+      // Fallback for user ID tokens
+      if (!user && decoded.uid.startsWith('usr-')) {
+        user = await UserService.getById(decoded.uid);
+      }
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authenticated identity has no linked Honey Chain user profile.',
+        });
+      }
+
+      // 3. Check Account Lifecycle Status
+      if (user.status !== 'ACTIVE') {
+        return res.status(403).json({
+          success: false,
+          error: `User account is ${user.status.toLowerCase()}. Access denied.`,
+          status: user.status,
+        });
+      }
+
+      // 4. Attach verified application user
       req.user = user;
       return next();
+    } catch (err: any) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired authorization token',
+        details: err.message,
+      });
     }
+  } catch (error: any) {
+    next(error);
   }
+}
 
-  // 2. Check Authorization Bearer token
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    const user = store.getUserByToken(token);
-    if (user) {
-      req.user = user;
-      return next();
-    }
+/**
+ * Strict Auth Guard: Requires a verified authenticated user
+ */
+export function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required. Please provide a valid Bearer token.',
+    });
   }
-
-  // 3. Fallback to default demo Admin user if no auth is explicitly passed in demo mode
-  req.user = store.getUsersByRole('ADMIN')[0];
   next();
 }
 
 /**
  * RBAC Guard Middleware: Enforces server-side permissions for specified roles.
+ * Never trusts frontend-supplied role values.
  */
 export function requireRoles(...allowedRoles: Role[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -59,7 +114,7 @@ export function requireRoles(...allowedRoles: Role[]) {
     }
 
     if (req.user.role === 'ADMIN') {
-      // Platform Admin has global oversight access
+      // Platform Admin has platform oversight access
       return next();
     }
 
@@ -87,11 +142,20 @@ export function requireTenant(req: AuthenticatedRequest, res: Response, next: Ne
     return next();
   }
 
-  const requestedOrgId = (req.params.orgId || req.body.organizationId || req.query.orgId) as string;
-  if (requestedOrgId && requestedOrgId !== req.user.organizationId) {
+  const userOrgId = req.user.orgId || req.user.organizationId;
+  const requestedOrgId = (
+    req.params.orgId || 
+    req.params.organizationId || 
+    req.body.orgId || 
+    req.body.organizationId || 
+    req.query.orgId || 
+    req.query.organizationId
+  ) as string;
+
+  if (requestedOrgId && requestedOrgId !== userOrgId) {
     return res.status(403).json({
       success: false,
-      error: `Forbidden: Cross-organization access denied. You belong to '${req.user.organizationId}'.`,
+      error: `Forbidden: Cross-organization access denied. You belong to '${userOrgId}'.`,
     });
   }
 

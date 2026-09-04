@@ -4,52 +4,77 @@ import { qualityService } from '../services/quality.service';
 import { z } from 'zod';
 
 const qualityTestSchema = z.object({
-  batchId: z.string(),
+  batchId: z.string().min(1, 'batchId is required'),
   labId: z.string().optional(),
   labName: z.string().optional(),
+  sampleId: z.string().optional(),
   testerName: z.string().optional(),
   testDate: z.string().optional(),
   parameters: z.object({
-    moisturePercent: z.number(),
-    hmfMgPerKg: z.number(),
-    sucrosePercent: z.number(),
-    pollenCountPerGram: z.number(),
+    moisturePercent: z.number().min(0).max(100),
+    hmfMgPerKg: z.number().min(0),
+    sucrosePercent: z.number().min(0).max(100),
+    c4SugarPercent: z.number().min(0).max(100).optional(),
+    pollenCountPerGram: z.number().min(0),
     antibioticResidue: z.enum(['NEGATIVE', 'POSITIVE']),
-    leadPpm: z.number(),
+    leadPpm: z.number().min(0),
   }),
+  certificateRef: z.string().optional(),
+  reportUrl: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export const qualityController = {
-  getTests(req: AuthenticatedRequest, res: Response) {
-    const { batchId } = req.query;
-    const tests = qualityService.getTests(batchId as string);
-    res.json({
-      success: true,
-      data: tests
-    });
+  async getTests(req: AuthenticatedRequest, res: Response) {
+    try {
+      const batchId = (req.params.batchId || req.query.batchId) as string | undefined;
+      const tests = await qualityService.getTests(batchId);
+      res.json({
+        success: true,
+        data: tests
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   },
 
-  recordTest(req: AuthenticatedRequest, res: Response) {
-    const parsed = qualityTestSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        error: 'Validation failed',
-        details: parsed.error.issues
+  async getTestsByBatchId(req: AuthenticatedRequest, res: Response) {
+    try {
+      const batchId = req.params.batchId;
+      const tests = await qualityService.getTests(batchId);
+      res.json({
+        success: true,
+        data: tests
       });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
     }
+  },
 
-    const test = qualityService.recordTest({
-      ...parsed.data,
-      labId: parsed.data.labId || req.user?.organizationId || 'ORG-LAB-01',
-      labName: parsed.data.labName || req.user?.organizationName || 'Apex Food Safety Labs',
-      testerName: parsed.data.testerName || req.user?.fullName || 'Quality Analyst',
-    });
+  async recordTest(req: AuthenticatedRequest, res: Response) {
+    try {
+      const parsed = qualityTestSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: parsed.error.issues
+        });
+      }
 
-    res.status(201).json({
-      success: true,
-      data: test
-    });
+      const test = await qualityService.recordTest({
+        ...parsed.data,
+        labId: parsed.data.labId || req.user?.organizationId || 'ORG-LAB-01',
+        labName: parsed.data.labName || req.user?.organizationName || 'Apex Food Safety Labs (NABL Accredited)',
+        testerName: parsed.data.testerName || req.user?.fullName || 'Dr. Arishta Mehta',
+      });
+
+      res.status(201).json({
+        success: true,
+        data: test
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   }
 };

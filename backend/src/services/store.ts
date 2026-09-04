@@ -5,7 +5,7 @@ import {
 } from '../types/index.js';
 import crypto from 'crypto';
 
-// In-Memory Seed Store for Phase 2 Production-Ready Platform
+// In-Memory Seed Store for Honey Chain Production Platform
 export const memoryStore = {
   organizations: new Map<string, Organization>([
     ['ORG-ADMIN', {
@@ -91,6 +91,7 @@ export const memoryStore = {
     ['USR-ADMIN-01', {
       id: 'USR-ADMIN-01',
       username: 'admin',
+      name: 'Vikramaditya Sharma',
       fullName: 'Vikramaditya Sharma',
       email: 'admin@honeychain.gov.in',
       role: 'ADMIN',
@@ -102,6 +103,7 @@ export const memoryStore = {
     ['USR-BEE-01', {
       id: 'USR-BEE-01',
       username: 'beekeeper_rajesh',
+      name: 'Rajesh Kumar Verma',
       fullName: 'Rajesh Kumar Verma',
       email: 'rajesh@himalayanbees.coop',
       role: 'BEEKEEPER',
@@ -113,6 +115,7 @@ export const memoryStore = {
     ['USR-PROC-01', {
       id: 'USR-PROC-01',
       username: 'processor_anita',
+      name: 'Anita Desai',
       fullName: 'Anita Desai',
       email: 'anita@nilgirihoney.in',
       role: 'PROCESSOR',
@@ -124,6 +127,7 @@ export const memoryStore = {
     ['USR-LOG-01', {
       id: 'USR-LOG-01',
       username: 'transporter_gurdeep',
+      name: 'Gurdeep Singh',
       fullName: 'Gurdeep Singh',
       email: 'gurdeep@bharatcoldchain.com',
       role: 'TRANSPORTER',
@@ -135,6 +139,7 @@ export const memoryStore = {
     ['USR-PACK-01', {
       id: 'USR-PACK-01',
       username: 'packager_priya',
+      name: 'Priya Sundaram',
       fullName: 'Priya Sundaram',
       email: 'priya@pureflora.in',
       role: 'PACKAGER',
@@ -146,6 +151,7 @@ export const memoryStore = {
     ['USR-LAB-01', {
       id: 'USR-LAB-01',
       username: 'analyst_mehta',
+      name: 'Dr. Arishta Mehta',
       fullName: 'Dr. Arishta Mehta',
       email: 'dr.mehta@apexlabs.res.in',
       role: 'QUALITY_LAB',
@@ -564,6 +570,13 @@ export const store = {
     memoryStore.batches.set(batchId, batch);
     return this.populateBatch(batch);
   },
+  updateBatchQuantity(batchId: string, quantity: number): Batch | undefined {
+    const batch = memoryStore.batches.get(batchId);
+    if (!batch) return undefined;
+    batch.quantity = quantity;
+    memoryStore.batches.set(batchId, batch);
+    return this.populateBatch(batch);
+  },
 
   // Processing Events
   getProcessingEvents(batchId: string): ProcessingEvent[] {
@@ -627,6 +640,10 @@ export const store = {
   // Admin Exceptions
   getExceptions(): AdminException[] {
     return memoryStore.exceptions;
+  },
+  addException(exc: AdminException): AdminException {
+    memoryStore.exceptions.unshift(exc);
+    return exc;
   },
   updateException(id: string, status: AdminException['status'], resolutionNotes?: string, resolvedBy?: string): AdminException | undefined {
     const exc = memoryStore.exceptions.find(e => e.id === id);

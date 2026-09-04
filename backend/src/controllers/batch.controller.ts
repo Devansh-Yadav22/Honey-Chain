@@ -98,25 +98,30 @@ export async function recordIntake(req: AuthenticatedRequest, res: Response, nex
 
 export async function addProcessingEvent(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
-    const { eventType, temperatureCelsius, moisturePercent, outputWeightKg, details } = req.body;
+    const { eventType, temperatureCelsius, moisturePercent, inputWeightKg, outputWeightKg, quantityKg, details } = req.body;
     const processorId = req.user?.organizationId || 'ORG-PROC-01';
     const processorName = req.user?.organizationName || 'Nilgiri Pure Extraction Ltd';
     const actorName = req.user?.fullName || 'Anita Desai';
 
-    const event = await batchService.addProcessingEvent(
+    const result = await batchService.addProcessingEvent(
       req.params.id, 
       processorId, 
       eventType || 'MOISTURE_EXTRACTION', 
       {
         processorName,
-        temperatureCelsius,
-        moisturePercent,
-        outputWeightKg,
+        temperatureCelsius: temperatureCelsius !== undefined ? parseFloat(temperatureCelsius) : undefined,
+        moisturePercent: moisturePercent !== undefined ? parseFloat(moisturePercent) : undefined,
+        inputWeightKg: inputWeightKg !== undefined ? parseFloat(inputWeightKg) : undefined,
+        outputWeightKg: outputWeightKg !== undefined ? parseFloat(outputWeightKg) : (quantityKg !== undefined ? parseFloat(quantityKg) : undefined),
         actorName,
         ...details
       }
     );
-    res.status(201).json({ success: true, data: event });
+    res.status(201).json({ 
+      success: true, 
+      data: result.event,
+      inconsistency: result.inconsistency
+    });
   } catch (err) {
     next(err);
   }

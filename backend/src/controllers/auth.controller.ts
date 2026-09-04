@@ -1,62 +1,70 @@
 import { Request, Response } from 'express';
-import { store } from '../services/store';
+import { AuthService } from '../services/auth.service';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { DEMO_USERS, DEMO_PASSWORD } from '../db/seed';
 
-export const authController = {
-  // Login demo endpoint - allows logging in by username or role
-  login(req: Request, res: Response) {
-    const { username, role } = req.body;
-    let user;
-
-    if (username) {
-      user = store.getUsers().find(u => u.username.toLowerCase() === username.toLowerCase());
-    } else if (role) {
-      user = store.getUsersByRole(role)[0];
-    }
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: 'User not found. Try one of: admin, beekeeper_rajesh, processor_anita, transporter_gurdeep, packager_priya, analyst_mehta'
-      });
-    }
-
-    // Return user with simulated bearer token
-    res.json({
-      success: true,
-      data: {
-        token: `token-${user.id}-${Date.now()}`,
-        user
+export class AuthController {
+  static async login(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ success: false, error: 'Email and password are required' });
       }
-    });
-  },
 
-  // Current authenticated user profile
-  getProfile(req: AuthenticatedRequest, res: Response) {
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: 'Not authenticated' });
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const result = await AuthService.login(email, password, ipAddress);
+      return res.json({ success: true, data: result });
+    } catch (err: any) {
+      return res.status(401).json({ success: false, error: err.message || 'Authentication failed' });
     }
-    res.json({
-      success: true,
-      data: req.user
-    });
-  },
-
-  // List all users (useful for role switcher in UI)
-  getUsers(req: Request, res: Response) {
-    const users = store.getUsers();
-    res.json({
-      success: true,
-      data: users
-    });
-  },
-
-  // List all organizations
-  getOrganizations(req: Request, res: Response) {
-    const orgs = store.getOrganizations();
-    res.json({
-      success: true,
-      data: orgs
-    });
   }
-};
+
+  static async signup(req: Request, res: Response) {
+    try {
+      const { email, password, name, role, orgName, orgType, phone, registrationNo, address } = req.body;
+      if (!email || !password || !name || !role || !orgName || !orgType) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email, password, name, role, orgName, and orgType are required',
+        });
+      }
+
+      const ipAddress = req.ip || req.socket.remoteAddress;
+      const result = await AuthService.signup(
+        { email, password, name, role, orgName, orgType, phone, registrationNo, address },
+        ipAddress
+      );
+      return res.status(201).json({ success: true, data: result });
+    } catch (err: any) {
+      return res.status(400).json({ success: false, error: err.message || 'Registration failed' });
+    }
+  }
+
+  static async getMe(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+      const result = await AuthService.getMe(req.user.id);
+      return res.json({ success: true, data: result });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+
+  static async getDemoAccounts(req: Request, res: Response) {
+    try {
+      const accounts = DEMO_USERS.map(u => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        orgId: u.orgId,
+        password: DEMO_PASSWORD
+      }));
+      return res.json({ success: true, data: accounts });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  }
+}

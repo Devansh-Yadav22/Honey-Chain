@@ -627,7 +627,7 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
                   <div className="pt-1 text-[11px]">
                     <span className="font-semibold block">Explainable Feature Attribution:</span>
                     <ul className="list-disc list-inside text-stone-800 pl-1 mt-0.5 space-y-0.5">
-                      {aiAnomaly.reasons.map((r, i) => (
+                      {aiAnomaly.reasons.map((r: string, i: number) => (
                         <li key={i}>{r}</li>
                       ))}
                     </ul>

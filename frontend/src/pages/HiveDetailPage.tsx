@@ -105,7 +105,7 @@ export const HiveDetailPage: React.FC<HiveDetailPageProps> = ({ hiveId, onBack }
             <span>AI Anomaly Alert — Severity: {anomalies.severity}</span>
           </div>
           <ul className="list-disc list-inside text-xs text-rose-900/90 space-y-1 pl-1 font-medium">
-            {anomalies.reasons.map((r, i) => (
+            {anomalies.reasons.map((r: string, i: number) => (
               <li key={i}>{r}</li>
             ))}
           </ul>

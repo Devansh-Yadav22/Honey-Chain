@@ -1,5 +1,35 @@
 -- Honey Chain PostgreSQL Database Schema
 
+-- Organizations (Multi-Tenancy)
+CREATE TABLE IF NOT EXISTS organizations (
+    id VARCHAR(64) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(64) NOT NULL, -- APIARY, PROCESSOR, LOGISTICS, PACKAGING_FACILITY, QUALITY_LAB, REGULATOR, ADMIN
+    status VARCHAR(32) DEFAULT 'PENDING', -- PENDING, ACTIVE, SUSPENDED, REJECTED
+    registration_no VARCHAR(128),
+    address VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(64),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Users (RBAC & Authentication)
+CREATE TABLE IF NOT EXISTS users (
+    id VARCHAR(64) PRIMARY KEY,
+    firebase_uid VARCHAR(128) UNIQUE,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
+    role VARCHAR(64) NOT NULL, -- ADMIN, BEEKEEPER, PROCESSOR, TRANSPORTER, PACKAGER, QUALITY_LAB
+    org_id VARCHAR(64) REFERENCES organizations(id) ON DELETE SET NULL,
+    status VARCHAR(32) DEFAULT 'ACTIVE', -- PENDING, ACTIVE, SUSPENDED, DEACTIVATED, REJECTED
+    phone VARCHAR(64),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid);
+
 CREATE TABLE IF NOT EXISTS beekeepers (
     id VARCHAR(64) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -85,4 +115,103 @@ CREATE TABLE IF NOT EXISTS certifications (
     certificate_type VARCHAR(128) NOT NULL,
     issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(32) DEFAULT 'VALID'
+);
+
+CREATE TABLE IF NOT EXISTS quality_tests (
+    id VARCHAR(64) PRIMARY KEY,
+    batch_id VARCHAR(64) NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    lab_id VARCHAR(64) NOT NULL,
+    lab_name VARCHAR(255) NOT NULL,
+    sample_id VARCHAR(64),
+    tester_name VARCHAR(255) NOT NULL,
+    test_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    moisture_percent NUMERIC(5, 2) NOT NULL,
+    hmf_mg_per_kg NUMERIC(6, 2) NOT NULL,
+    sucrose_percent NUMERIC(5, 2) NOT NULL,
+    c4_sugar_percent NUMERIC(5, 2) DEFAULT 0.0,
+    pollen_count_per_gram INTEGER NOT NULL,
+    antibiotic_residue VARCHAR(32) DEFAULT 'NEGATIVE',
+    lead_ppm NUMERIC(6, 3) DEFAULT 0.0,
+    overall_status VARCHAR(32) NOT NULL, -- PASSED, REVIEW_REQUIRED
+    certificate_hash_sha256 VARCHAR(64) NOT NULL,
+    report_url VARCHAR(512),
+    certificate_ref VARCHAR(255),
+    notes TEXT,
+    blockchain_tx_id VARCHAR(128),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tier 2: Handoffs (Custody State Machine)
+CREATE TABLE IF NOT EXISTS handoffs (
+    id VARCHAR(64) PRIMARY KEY,
+    batch_id VARCHAR(64) NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    sender_id VARCHAR(64) NOT NULL REFERENCES users(id),
+    receiver_id VARCHAR(64) NOT NULL REFERENCES users(id),
+    from_stage VARCHAR(64) NOT NULL,
+    to_stage VARCHAR(64) NOT NULL,
+    quantity NUMERIC(8, 2) NOT NULL,
+    unit VARCHAR(16) DEFAULT 'kg',
+    status VARCHAR(32) DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, DISPUTED
+    dispute_reason TEXT,
+    evidence_hashes JSONB DEFAULT '[]'::jsonb,
+    location JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Tier 2: Evidence Records (Off-chain with SHA-256)
+CREATE TABLE IF NOT EXISTS evidence (
+    id VARCHAR(64) PRIMARY KEY,
+    batch_id VARCHAR(64) NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    uploader_id VARCHAR(64) NOT NULL REFERENCES users(id),
+    file_type VARCHAR(64) NOT NULL, -- LAB_REPORT, TRANSPORT_WAYBILL, SEAL_IMAGE, HARVEST_CERTIFICATE, TEMPERATURE_LOG, PACKAGING_MANIFEST
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(512) NOT NULL,
+    file_size INTEGER NOT NULL,
+    mime_type VARCHAR(128) NOT NULL,
+    sha256_hash VARCHAR(64) NOT NULL,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    blockchain_tx_id VARCHAR(128),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tier 1/2: GPS & Location History
+CREATE TABLE IF NOT EXISTS location_records (
+    id VARCHAR(64) PRIMARY KEY,
+    batch_id VARCHAR(64) NOT NULL REFERENCES batches(id) ON DELETE CASCADE,
+    recorded_by VARCHAR(64) NOT NULL REFERENCES users(id),
+    stage VARCHAR(64) NOT NULL,
+    latitude NUMERIC(10, 7) NOT NULL,
+    longitude NUMERIC(10, 7) NOT NULL,
+    accuracy NUMERIC(8, 2),
+    address VARCHAR(255),
+    is_mocked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tier 2: Security & Integrity Alerts
+CREATE TABLE IF NOT EXISTS alerts (
+    id VARCHAR(64) PRIMARY KEY,
+    batch_id VARCHAR(64) REFERENCES batches(id) ON DELETE CASCADE,
+    severity VARCHAR(32) NOT NULL, -- INFO, WARNING, CRITICAL
+    category VARCHAR(64) NOT NULL, -- QUANTITY_DRIFT, GEO_MISMATCH, TIME_ANOMALY, AI_ANOMALY, UNVERIFIED_HANDOFF, UNAUTHORIZED_ROLE
+    message TEXT NOT NULL,
+    details JSONB DEFAULT '{}'::jsonb,
+    status VARCHAR(32) DEFAULT 'OPEN', -- OPEN, ACKNOWLEDGED, RESOLVED
+    resolved_by VARCHAR(64) REFERENCES users(id),
+    resolution_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Tier 2: Tamper-evident Audit Logs
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(64),
+    action VARCHAR(128) NOT NULL,
+    resource_type VARCHAR(64) NOT NULL,
+    resource_id VARCHAR(64),
+    ip_address VARCHAR(64),
+    details JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

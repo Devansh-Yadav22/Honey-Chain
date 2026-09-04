@@ -16,8 +16,6 @@ from app.schemas.telemetry import (
 
 router = APIRouter(prefix="/ai", tags=["provenance"])
 
-_QUANTITY_TOLERANCE_RATIO = 0.10
-
 
 @router.post("/provenance/check", response_model=ProvenanceCheckResponse)
 def check_provenance(
@@ -35,27 +33,43 @@ def check_provenance(
             ],
         )
 
-    deviation = abs(claimed - observed) / claimed
+    # 1. Impossible Increase / Volume Inflation Check (Output > Input)
+    if observed > claimed:
+        diff = round(observed - claimed, 2)
+        score = round(max(0.0, 1.0 - (diff / claimed)), 2)
+        return ProvenanceCheckResponse(
+            status="SUSPICIOUS",
+            consistencyScore=score,
+            anomalies=[
+                (
+                    f"Processing/observed quantity ({observed} kg) exceeds "
+                    f"recorded harvest/batch quantity ({claimed} kg)."
+                ),
+                (
+                    "Potential volume adulteration or unverified external "
+                    "blending detected without authorized harvest record."
+                ),
+            ],
+        )
 
-    if deviation <= _QUANTITY_TOLERANCE_RATIO:
+    # 2. Legitimate Processing Loss Check (Output <= Input)
+    loss = claimed - observed
+    loss_ratio = loss / claimed
+    if loss_ratio <= 0.35:
         return ProvenanceCheckResponse(
             status="VERIFIED",
-            consistencyScore=round(max(0.0, 1.0 - deviation), 2),
+            consistencyScore=round(max(0.85, 1.0 - (loss_ratio * 0.2)), 2),
             anomalies=[],
         )
 
+    # 3. Excessive Unexplained Shrinkage
     return ProvenanceCheckResponse(
         status="SUSPICIOUS",
-        consistencyScore=round(max(0.0, 1.0 - deviation), 2),
+        consistencyScore=round(max(0.0, 1.0 - loss_ratio), 2),
         anomalies=[
             (
-                f"Recorded harvest quantity ({claimed} kg) differs from "
-                f"observed quantity ({observed} kg) beyond the allowed "
-                "consistency tolerance."
-            ),
-            (
-                "Available evidence is inconsistent with the recorded "
-                "provenance quantity; further verification is required."
+                f"Excessive volume shrinkage ({round(loss, 2)} kg, "
+                f"{round(loss_ratio * 100, 1)}%) exceeds expected processing loss tolerance."
             ),
         ],
-    )
+    )

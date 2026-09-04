@@ -1,27 +1,26 @@
 import React, { useState } from 'react';
-import { Search, UserCheck, ChevronDown } from 'lucide-react';
+import { Search, LogOut, Shield, LogIn, Building2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../types';
 
 interface NavbarProps {
   onSearchPassport?: (batchId: string) => void;
-  onSelectRole?: (role: Role) => void;
+  onNavigateLogin?: () => void;
 }
 
-const ROLE_LABELS: Record<Role, { label: string; icon: string; orgHint: string }> = {
-  ADMIN: { label: 'Platform Admin', icon: '🛡️', orgHint: 'Operations HQ' },
-  BEEKEEPER: { label: 'Beekeeper', icon: '🐝', orgHint: 'Himalayan Coop' },
-  PROCESSOR: { label: 'Processor', icon: '⚙️', orgHint: 'Nilgiri Extraction' },
-  TRANSPORTER: { label: 'Transporter', icon: '🚚', orgHint: 'Bharat Logistics' },
-  PACKAGER: { label: 'Packaging Hub', icon: '📦', orgHint: 'PureFlora Packaging' },
-  QUALITY_LAB: { label: 'Quality / Lab', icon: '🔬', orgHint: 'Apex NABL Labs' },
-  CONSUMER: { label: 'Public Consumer', icon: '🍯', orgHint: 'QR Passport View' }
+const ROLE_METAS: Record<Role, { label: string; icon: string; badgeBg: string; badgeBorder: string; badgeText: string }> = {
+  ADMIN: { label: 'Platform Admin', icon: '🛡️', badgeBg: 'bg-purple-100/80', badgeBorder: 'border-purple-200', badgeText: 'text-purple-900' },
+  BEEKEEPER: { label: 'Beekeeper', icon: '🐝', badgeBg: 'bg-amber-100/80', badgeBorder: 'border-amber-200', badgeText: 'text-amber-900' },
+  PROCESSOR: { label: 'Processor', icon: '⚙️', badgeBg: 'bg-blue-100/80', badgeBorder: 'border-blue-200', badgeText: 'text-blue-900' },
+  TRANSPORTER: { label: 'Transporter', icon: '🚚', badgeBg: 'bg-emerald-100/80', badgeBorder: 'border-emerald-200', badgeText: 'text-emerald-900' },
+  PACKAGER: { label: 'Packaging Hub', icon: '📦', badgeBg: 'bg-orange-100/80', badgeBorder: 'border-orange-200', badgeText: 'text-orange-900' },
+  QUALITY_LAB: { label: 'Quality Lab', icon: '🔬', badgeBg: 'bg-teal-100/80', badgeBorder: 'border-teal-200', badgeText: 'text-teal-900' },
+  CONSUMER: { label: 'Consumer', icon: '🍯', badgeBg: 'bg-stone-100', badgeBorder: 'border-stone-200', badgeText: 'text-stone-800' }
 };
 
-export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onSelectRole }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onNavigateLogin }) => {
   const [inputVal, setInputVal] = useState('');
-  const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const { currentRole, currentUser, currentOrg, switchRole } = useAuth();
+  const { currentRole, currentUser, currentOrg, isAuthenticated, logout } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,13 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onSelectRole }
     }
   };
 
-  const handleRoleChange = (role: Role) => {
-    switchRole(role);
-    setShowRoleMenu(false);
-    if (onSelectRole) onSelectRole(role);
-  };
-
-  const currentRoleMeta = ROLE_LABELS[currentRole] || ROLE_LABELS.ADMIN;
+  const currentRoleMeta = ROLE_METAS[currentRole] || ROLE_METAS.ADMIN;
 
   return (
     <header className="h-16 border-b border-[#EAE3D9] bg-white/95 backdrop-blur-md px-4 md:px-8 flex items-center justify-between sticky top-0 z-40 select-none shadow-xs">
@@ -50,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onSelectRole }
           <div className="flex items-center space-x-2">
             <span className="font-bold text-lg text-stone-900 tracking-tight">Honey Chain</span>
             <span className="text-[10px] font-mono font-semibold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded-md border border-amber-200">
-              Phase 2
+              Verified Network
             </span>
           </div>
         </div>
@@ -58,6 +51,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onSelectRole }
 
       {/* Center Search & Right Controls */}
       <div className="flex items-center space-x-4">
+        {/* Passport Quick Search */}
         <form onSubmit={handleSubmit} className="relative hidden md:block">
           <div className="relative flex items-center">
             <Search className="w-3.5 h-3.5 absolute left-3.5 text-stone-400 pointer-events-none" />
@@ -77,56 +71,49 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearchPassport, onSelectRole }
           </div>
         </form>
 
-        {/* Dynamic Persona / Role Switcher */}
-        <div className="relative">
-          <button
-            onClick={() => setShowRoleMenu(!showRoleMenu)}
-            className="flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EAE3D9] bg-[#FFFDF9] hover:bg-stone-50 transition shadow-xs"
-          >
-            <span className="text-base">{currentRoleMeta.icon}</span>
-            <div className="text-left hidden sm:block">
-              <p className="text-xs font-bold text-stone-900 leading-tight flex items-center">
-                {currentRoleMeta.label}
-                <ChevronDown className="w-3 h-3 ml-1 text-stone-500" />
-              </p>
-              <p className="text-[10px] text-stone-500 font-mono truncate max-w-[130px]">
-                {currentUser ? currentUser.fullName : 'Public Access'}
-              </p>
-            </div>
-          </button>
-
-          {/* Dropdown Menu */}
-          {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-[#EAE3D9] rounded-xl shadow-xl py-2 z-50 text-xs">
-              <div className="px-3 py-1.5 border-b border-[#EAE3D9] text-[10px] font-mono text-stone-500 uppercase tracking-wider font-semibold">
-                Switch Participant Persona
+        {/* Authenticated User Profile & Logout / Sign In */}
+        {isAuthenticated && currentUser ? (
+          <div className="flex items-center space-x-3">
+            {/* User Profile Card */}
+            <div className="flex items-center space-x-2.5 px-3 py-1.5 rounded-xl border border-[#EAE3D9] bg-[#FFFDF9] shadow-xs">
+              <span className="text-base">{currentRoleMeta.icon}</span>
+              <div className="text-left hidden sm:block">
+                <div className="flex items-center space-x-1.5">
+                  <p className="text-xs font-bold text-stone-900 leading-tight">
+                    {currentUser.name || currentUser.fullName || currentUser.email}
+                  </p>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${currentRoleMeta.badgeBg} ${currentRoleMeta.badgeBorder} ${currentRoleMeta.badgeText}`}>
+                    {currentRole}
+                  </span>
+                </div>
+                <p className="text-[10px] text-stone-500 font-mono truncate max-w-[160px] flex items-center mt-0.5">
+                  <Building2 className="w-2.5 h-2.5 mr-1 text-stone-400" />
+                  {currentOrg?.name || currentUser.organizationName || 'Honey Chain Member'}
+                </p>
               </div>
-
-              {(Object.keys(ROLE_LABELS) as Role[]).map(r => {
-                const item = ROLE_LABELS[r];
-                const isActive = currentRole === r;
-                return (
-                  <button
-                    key={r}
-                    onClick={() => handleRoleChange(r)}
-                    className={`w-full px-3 py-2 text-left flex items-center justify-between hover:bg-amber-50/60 transition ${
-                      isActive ? 'bg-amber-50/90 font-bold text-amber-900' : 'text-stone-700'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span>{item.icon}</span>
-                      <div>
-                        <p className="font-semibold text-stone-900">{item.label}</p>
-                        <p className="text-[10px] text-stone-500">{item.orgHint}</p>
-                      </div>
-                    </div>
-                    {isActive && <UserCheck className="w-4 h-4 text-amber-700" />}
-                  </button>
-                );
-              })}
             </div>
-          )}
-        </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              title="Sign Out"
+              className="flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition shadow-2xs"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onNavigateLogin}
+              className="flex items-center space-x-1.5 bg-amber-700 hover:bg-amber-800 text-white px-4 py-2 rounded-xl text-xs font-semibold transition shadow-xs"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

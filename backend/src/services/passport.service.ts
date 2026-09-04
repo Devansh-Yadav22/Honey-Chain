@@ -4,6 +4,7 @@ import { getHiveById } from './hive.service';
 import { aiService } from './ai.service';
 import { blockchainService } from './blockchain.service';
 import { qualityService } from './quality.service';
+import { ConsistencyService } from './consistency.service';
 
 export async function getHoneyPassport(batchId: string): Promise<HoneyPassport | null> {
   const batch = await getBatchById(batchId);
@@ -22,6 +23,9 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
   }
 
   const recordedQuantity = batch.harvest?.quantity || batch.quantity;
+  const consistencyReport = await ConsistencyService.evaluateBatch(batchId);
+  
+  // Also query AI Provenance check
   const consistencyResult = await aiService.checkProvenanceConsistency({
     batchId: batch.id,
     blockchainHarvestQuantity: recordedQuantity,
@@ -29,12 +33,33 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
   });
 
   const fabricVerification = await blockchainService.verifyBatch(batchId);
-  const qualityTests = qualityService.getTests(batchId);
-  const latestQualityTest = qualityTests.length > 0 ? qualityTests[qualityTests.length - 1] : undefined;
+  const qualityTests = await qualityService.getTests(batchId);
+  const latestQualityTest = qualityTests.length > 0 ? qualityTests[0] : undefined;
 
-  const isSuspicious = batch.status === 'SUSPICIOUS' || consistencyResult.status === 'SUSPICIOUS';
+  const isSuspicious = 
+    batch.status === 'SUSPICIOUS' || 
+    !consistencyReport.isConsistent || 
+    consistencyResult.status === 'SUSPICIOUS' ||
+    consistencyReport.inconsistencies.length > 0;
+
   const provenanceStatus = isSuspicious ? 'SUSPICIOUS' : 'CONFIRMED';
   const consistencyStatus = isSuspicious ? 'SUSPICIOUS' : 'NORMAL';
+
+  const combinedAnomalies: string[] = [];
+  if (isSuspicious) {
+    if (consistencyReport.inconsistencies.length > 0) {
+      consistencyReport.inconsistencies.forEach(inc => combinedAnomalies.push(inc.message));
+    }
+    if (consistencyResult.anomalies.length > 0) {
+      consistencyResult.anomalies.forEach(a => {
+        if (!combinedAnomalies.includes(a)) combinedAnomalies.push(a);
+      });
+    }
+    if (combinedAnomalies.length === 0) {
+      combinedAnomalies.push(`Recorded harvest volume (${recordedQuantity} kg) differs from observed batch volume (${batch.quantity} kg).`);
+      combinedAnomalies.push('AI Evidence Consistency flagged unexpected volume increase without authorized harvest record.');
+    }
+  }
 
   return {
     batchId: batch.id,
@@ -52,7 +77,7 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
         batchId: p.batchId,
         processorId: p.processorId,
         eventType: p.eventType,
-        details: { temperature: p.temperatureCelsius, moisture: p.moisturePercent },
+        details: { temperature: p.temperatureCelsius, moisture: p.moisturePercent, outputWeightKg: p.outputWeightKg },
         timestamp: p.timestamp
       })),
       transport: (batch.transportEvents || []).map(t => ({
@@ -86,13 +111,8 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
       blockchainTxId: batch.blockchainTxId || fabricVerification.txId,
       provenanceStatus,
       consistencyStatus,
-      consistencyScore: isSuspicious ? 0.24 : 0.98,
-      anomalies: isSuspicious
-        ? [
-            `Recorded harvest volume (${recordedQuantity} kg) differs from observed batch volume (${batch.quantity} kg).`,
-            'AI Evidence Consistency flagged unexpected volume increase without authorized harvest record.'
-          ]
-        : []
+      consistencyScore: isSuspicious ? (consistencyReport.score / 100 || 0.24) : 0.98,
+      anomalies: combinedAnomalies
     }
   };
 }

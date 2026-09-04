@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, ShieldAlert, CheckCircle2, ArrowLeft, FlaskConical, Cpu, Layers, ExternalLink } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle2, ArrowLeft, FlaskConical, Cpu, Layers, Clock, Lock } from 'lucide-react';
 import { HoneyPassport } from '../types';
 import { getHoneyPassport } from '../services/api';
 
@@ -22,6 +22,11 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
   const isVerified = passport.verification.provenanceStatus === 'VERIFIED' || passport.verification.provenanceStatus === 'CONFIRMED';
   const isAiNormal = passport.verification.consistencyStatus !== 'SUSPICIOUS';
   const qualityPassed = passport.quality?.status === 'PASSED';
+
+  const hasProcessing = passport.timeline.processing && passport.timeline.processing.length > 0;
+  const hasTransport = passport.timeline.transport && passport.timeline.transport.length > 0;
+  const hasPackaging = passport.timeline.packaging && passport.timeline.packaging.length > 0;
+  const isBatchPublished = passport.status === 'PUBLISHED' || hasPackaging;
 
   return (
     <div className="max-w-3xl mx-auto space-y-4 py-2 select-none">
@@ -112,7 +117,7 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
             </div>
             <p className="font-semibold text-stone-800 text-[11px]">NABL Accredited Assay</p>
             <p className="text-[10px] text-stone-500">
-              {qualityPassed ? `Moisture ${passport.quality?.moisturePercent}% • HMF ${passport.quality?.hmfMgPerKg} mg/kg` : 'Lab certificate review'}
+              {qualityPassed ? `Moisture ${passport.quality?.moisturePercent}% • HMF ${passport.quality?.hmfMgPerKg} mg/kg` : 'Lab certificate verification'}
             </p>
           </div>
         </div>
@@ -151,48 +156,90 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <div>
                   <span className="font-bold text-stone-800">1. Apiary Honey Harvest</span>
-                  <p className="text-[11px] text-stone-500">Origin: {passport.origin}</p>
+                  <p className="text-[11px] text-stone-500">Origin: {passport.origin} • {passport.quantity} kg</p>
                 </div>
               </div>
               <span className="font-mono text-[10px] text-stone-500">
-                {passport.harvest?.harvestDate ? new Date(passport.harvest.harvestDate).toLocaleDateString() : 'Aug 20, 2026'}
+                {passport.harvest?.harvestDate ? new Date(passport.harvest.harvestDate).toLocaleDateString() : (passport.createdAt ? new Date(passport.createdAt).toLocaleDateString() : 'Confirmed')}
               </span>
             </div>
 
             {/* Processing */}
-            <div className="p-3 rounded-lg bg-[#FAF8F5] border border-[#EAE3D9] flex items-center justify-between">
+            <div className={`p-3 rounded-lg border flex items-center justify-between ${
+              hasProcessing ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+            }`}>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                {hasProcessing ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-stone-400 shrink-0" />
+                )}
                 <div>
-                  <span className="font-bold text-stone-800">2. Thermal Stabilization & De-Aeration</span>
-                  <p className="text-[11px] text-stone-500">Gentle extraction &le;40°C preserving live enzymes</p>
+                  <span className={`font-bold ${hasProcessing ? 'text-stone-800' : 'text-stone-500'}`}>
+                    2. Thermal Stabilization & De-Aeration
+                  </span>
+                  <p className="text-[11px] text-stone-500">
+                    {hasProcessing
+                      ? `${passport.timeline.processing[0].eventType} (Gentle extraction \u226440°C)`
+                      : 'Stage in progress: Awaiting processor extraction run'}
+                  </p>
                 </div>
               </div>
-              <span className="font-mono text-[10px] text-stone-500">Verified Step</span>
+              <span className="font-mono text-[10px] text-stone-500">
+                {hasProcessing ? new Date(passport.timeline.processing[0].timestamp).toLocaleDateString() : 'Pending'}
+              </span>
             </div>
 
             {/* Cold Chain Transport */}
-            <div className="p-3 rounded-lg bg-[#FAF8F5] border border-[#EAE3D9] flex items-center justify-between">
+            <div className={`p-3 rounded-lg border flex items-center justify-between ${
+              hasTransport ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+            }`}>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                {hasTransport ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-stone-400 shrink-0" />
+                )}
                 <div>
-                  <span className="font-bold text-stone-800">3. Temperature-Controlled Logistics</span>
-                  <p className="text-[11px] text-stone-500">Monitored refrigerated transit to packaging facility</p>
+                  <span className={`font-bold ${hasTransport ? 'text-stone-800' : 'text-stone-500'}`}>
+                    3. Temperature-Controlled Logistics
+                  </span>
+                  <p className="text-[11px] text-stone-500">
+                    {hasTransport
+                      ? `${passport.timeline.transport[0].source} \u2794 ${passport.timeline.transport[0].destination}`
+                      : 'Stage in progress: Awaiting carrier dispatch'}
+                  </p>
                 </div>
               </div>
-              <span className="font-mono text-[10px] text-stone-500">Verified Step</span>
+              <span className="font-mono text-[10px] text-stone-500">
+                {hasTransport ? new Date(passport.timeline.transport[0].timestamp).toLocaleDateString() : 'Pending'}
+              </span>
             </div>
 
             {/* Packaging */}
-            <div className="p-3 rounded-lg bg-[#FAF8F5] border border-[#EAE3D9] flex items-center justify-between">
+            <div className={`p-3 rounded-lg border flex items-center justify-between ${
+              hasPackaging ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+            }`}>
               <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                {hasPackaging ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-stone-400 shrink-0" />
+                )}
                 <div>
-                  <span className="font-bold text-stone-800">4. Final Tamper-Evident Packaging & QR Release</span>
-                  <p className="text-[11px] text-stone-500">Food-grade glass bottling with unique consumer QR</p>
+                  <span className={`font-bold ${hasPackaging ? 'text-stone-800' : 'text-stone-500'}`}>
+                    4. Final Tamper-Evident Packaging & QR Release
+                  </span>
+                  <p className="text-[11px] text-stone-500">
+                    {hasPackaging
+                      ? `Product: ${passport.timeline.packaging[0].productId}`
+                      : 'Stage in progress: Awaiting packaging facility sealing'}
+                  </p>
                 </div>
               </div>
-              <span className="font-mono text-[10px] text-stone-500">Published</span>
+              <span className="font-mono text-[10px] text-stone-500">
+                {hasPackaging ? new Date(passport.timeline.packaging[0].packagingDate).toLocaleDateString() : 'Pending'}
+              </span>
             </div>
           </div>
         </div>
@@ -201,7 +248,7 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
         <div className="pt-4 border-t border-[#EAE3D9] space-y-2 text-[11px]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between text-stone-500 font-mono text-[10px]">
             <span>Fabric Tx ID: {passport.verification.blockchainTxId || '0x8f3c7e9a2b4d1056'}</span>
-            <span>Bee-Tech • SIH26021</span>
+            <span>Bee-Tech • Honey Chain Trust Network</span>
           </div>
           <p className="text-[10px] text-stone-500 italic">
             Disclaimer: Blockchain preserves historical transactions; AI evaluates evidence consistency. Laboratory test data reflects NABL assay results.
