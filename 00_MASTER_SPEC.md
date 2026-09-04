@@ -1876,6 +1876,54 @@ The Honey Passport makes the result understandable to the consumer.
 
 ---
 
+---
+
 # 46. FINAL DEMO SENTENCE
 
 > **Honey Chain doesn't just record where honey came from — it builds a verifiable digital journey from hive to consumer and checks whether that journey is consistent with the evidence available along the way.**
+
+---
+
+# 47. LIVE DEMO ARCHITECTURE & DEMONSTRATION WORKFLOW (SIH 2026)
+
+## 47.1 Purpose
+The **Live Demo** interface (`🎬 Live Demo`) is a top-level, interactive operator tool built specifically for SIH judges and evaluators to execute and visibly verify the end-to-end Honey Chain pipeline:
+`Frontend → Backend API → AI Inference → PostgreSQL Database → Hyperledger Fabric → Provenance Verification → Honey Passport QR`.
+
+> [!IMPORTANT]
+> **Operator Tool Constraint:** Live Demo is strictly a demonstration controller and **not** a production role. It introduces **no** new roles into RBAC and leaves existing participant workflows (`ADMIN`, `BEEKEEPER`, `PROCESSOR`, `TRANSPORTER`, `PACKAGER`, `QUALITY_LAB`, `CONSUMER`) intact.
+
+## 47.2 Frontend Route & Navigation
+- **Navigation Item:** `🎬 Live Demo` (prominently accessible at top of sidebar and global views)
+- **Tab State ID:** `live-demo`
+- **Passport Deep Link:** Automatically redirects to `/passport/{batchId}` upon packaging completion.
+
+## 47.3 Guided Demonstration Flow
+1. **Demo Session Setup:** Generates session-isolated identifiers (e.g., `HC-DEMO-2026-XXXX`, `HIVE-DEMO-001`) to prevent overwriting production batches while executing identical business logic.
+2. **Hive Selection / Registration:** Checks backend API (`/api/hives`) and registers or selects a demo apiary.
+3. **Telemetry Ingestion:** Real telemetry payloads dispatched to `POST /api/telemetry` with realistic environmental metrics (Normal: 34.2°C, 61% RH vs. Anomaly: 41.8°C, 82% RH, sudden weight drop).
+4. **Real AI ML Inference:** Evaluates telemetry using the backend `/api/ai/health` and `/api/ai/anomaly` endpoints backed by the trained `IsolationForest` ML model on port 8000. Displays real confidence scores and feature attribution reasons without hardcoding.
+5. **Harvest Batch Creation:** Submits `POST /api/batches` with botanical origin, yield, and beekeeper metadata.
+6. **Hyperledger Fabric Provenance Recording:** Backend invokes Fabric Gateway chaincode (`createBatch`), returning actual blockchain confirmation status.
+7. **Processing Step:** Submits `POST /api/batches/:id/events` for thermal extraction / filtration.
+8. **Transport Step:** Submits logistics transit event with GPS route and cold-chain temperature telemetry.
+9. **Packaging Step:** Submits packaging facility verification and batch sealing event.
+10. **Fabric Provenance Verification:** Calls `GET /api/batches/:id/verify-provenance` to validate blockchain-backed history against recorded sensor evidence and compute a consistency score.
+11. **Digital Honey Passport & QR:** Renders digital passport QR encoding `/passport/{batchId}` for consumer trust verification.
+
+## 47.4 Relationship with AI & Blockchain
+- **AI Service:** Evaluates physical sensor evidence (`IsolationForest` anomaly detector & health score). If AI daemon on port 8000 is unreachable, the step displays real service unavailability rather than fabricated scores.
+- **Hyperledger Fabric:** Records immutable lifecycle events in channel `honeychannel` via chaincode `honeychain`. If Fabric network is unreachable, transaction errors are surfaced transparently.
+
+## 47.5 Data Isolation & Safety
+- Demo operations use safe prefixes (`HIVE-DEMO-` and `HC-DEMO-`).
+- Resetting the demo clears local session state only; it never wipes Fabric ledgers, peer volumes, or production database records.
+
+## 47.6 Current Implementation Status
+- [x] Live Demo Page (`frontend/src/pages/LiveDemoPage.tsx`) implemented and active.
+- [x] Top-level navigation integration in `Sidebar.tsx` and `App.tsx`.
+- [x] Real API client integration in `frontend/src/services/api.ts`.
+- [x] PostgreSQL database container (`honeychain-db`) connected and operational.
+- [x] AI ML service running and connected on `http://127.0.0.1:8000`.
+- [x] Warm linen/stone UI styling with zero neon colors.
+

@@ -1,19 +1,24 @@
 """
 POST /ai/anomaly
 
-Placeholder implementation for Step 1 (contracts). Real detection logic
-arrives in Step 4 (Anomaly Detection Engine).
+ML-powered explainable anomaly detection using real-world HOBOS telemetry model.
 """
 
 from fastapi import APIRouter
 
-from app.schemas.anomaly import AnomalyRequest, AnomalyResponse
+from app.schemas.telemetry import AnomalyRequest, AnomalyResponse
+from app.services.ml_service import ml_service
 
 router = APIRouter(prefix="/ai", tags=["anomaly"])
 
 
 @router.post("/anomaly", response_model=AnomalyResponse)
 def get_anomaly(payload: AnomalyRequest) -> AnomalyResponse:
-    # TODO (Step 4): replace with real deviation checks across
-    # temperature / humidity / weight / activity + temporal consistency.
-    return AnomalyResponse(anomaly=False, severity=None, reasons=[])
+    """
+    Evaluates latest hive telemetry using the trained Isolation Forest ML model.
+    Returns anomaly status, calibrated severity (CRITICAL / WARNING / NONE), and explainable reasons.
+    """
+    return ml_service.analyze_anomaly(
+        hive_id=payload.hiveId,
+        telemetry=payload.telemetry
+    )

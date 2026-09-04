@@ -1,0 +1,19 @@
+peer:
+  id: peer0.org1.honeychain.local
+  networkId: honeychain
+  address: localhost:7051
+  addressAutoDetect: false
+  mspConfigPath: C:/Users/Devansh Yadav/OneDrive/Desktop/Honey-Chain/blockchain/network/organizations/peerOrganizations/org1.honeychain.local/users/Admin@org1.honeychain.local/msp
+  localMspId: Org1MSP
+  fileSystemPath: C:/Users/Devansh Yadav/OneDrive/Desktop/Honey-Chain/blockchain/network/peer-ledger
+
+BCCSP:
+  Default: SW
+  SW:
+    Hash: SHA2
+    Security: 256
+    FileKeyStore:
+      KeyStore:
+
+mspConfigPath: C:/Users/Devansh Yadav/OneDrive/Desktop/Honey-Chain/blockchain/network/organizations/peerOrganizations/org1.honeychain.local/users/Admin@org1.honeychain.local/msp
+localMspId: Org1MSP

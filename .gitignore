@@ -53,5 +53,22 @@ coverage/
 htmlcov/
 .coverage
 
-# Data (generated)
+# Data (raw / large archives)
+archive/
 data/generated/
+
+# Backups and local peer production runtime
+blockchain_BACKUP_*/
+blockchain/honeychannel_verification_result/
+blockchain/network/peer-production/
+blockchain/network/*.block
+blockchain/network/*.raw
+blockchain/network/*.der
+blockchain/network/*.json
+blockchain/network/*.pem
+blockchain/network/*.py
+blockchain/network/*.sh
+blockchain/network/orderer-blockfile_*
+blockchain/*.tar.gz
+blockchain/network/*.tar.gz
+

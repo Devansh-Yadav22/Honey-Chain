@@ -1,0 +1,53 @@
+{
+  "model_version": "hive-anomaly-v1",
+  "algorithm": "IsolationForest",
+  "n_estimators": 150,
+  "contamination": 0.03,
+  "random_seed": 42,
+  "training_dataset": "HOBOS Hive Telemetry Dataset + Active-Season Nest Calibration",
+  "num_training_samples": 15047,
+  "num_test_samples": 3052,
+  "features": [
+    "temperature",
+    "humidity",
+    "weight",
+    "activity",
+    "hour_sin",
+    "hour_cos",
+    "temp_hum_ratio"
+  ],
+  "thresholds": {
+    "normal_upper": 0.5,
+    "warning_upper": 0.72
+  },
+  "feature_baselines": {
+    "temperature": {
+      "p05": 10.0,
+      "p95": 36.5,
+      "mean": 22.5
+    },
+    "humidity": {
+      "p05": 45.0,
+      "p95": 80.0,
+      "mean": 68.0
+    },
+    "weight": {
+      "p05": 38.0,
+      "p95": 62.0,
+      "mean": 50.0
+    },
+    "activity": {
+      "p05": 0.1,
+      "p95": 0.9,
+      "mean": 0.5
+    }
+  },
+  "test_anomaly_distribution": {
+    "mean_score": 0.22983071002774677,
+    "median_score": 0.21309224972995836,
+    "normal_pct": 96.42857142857143,
+    "warning_pct": 3.079947575360419,
+    "critical_pct": 0.49148099606815204
+  },
+  "created_at": "2026-09-04T12:17:12.360478+00:00"
+}
