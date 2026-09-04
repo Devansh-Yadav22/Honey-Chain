@@ -153,6 +153,12 @@ const PURITY_DISCLAIMER =
 export class HoneyChainContract extends Contract {
   @Transaction()
   public async initLedger(ctx: Context): Promise<void> {
+    const hiveKey = this.hiveKey('HIVE-001');
+    const existingHive = await ctx.stub.getState(hiveKey);
+    if (existingHive.length > 0) {
+      return;
+    }
+
     const hive: Hive = {
       docType: 'Hive',
       hiveId: 'HIVE-001',
@@ -171,7 +177,7 @@ export class HoneyChainContract extends Contract {
       updatedAt: new Date().toISOString(),
     };
 
-    await ctx.stub.putState(this.hiveKey(hive.hiveId), this.toBuffer(hive));
+    await ctx.stub.putState(hiveKey, this.toBuffer(hive));
   }
 
   @Transaction()
@@ -380,10 +386,21 @@ export class HoneyChainContract extends Contract {
 
         if (item.value) {
           const timestamp = item.value.timestamp
-            ? new Date(
-                item.value.timestamp.seconds.low * 1000 + Math.floor(item.value.timestamp.nanos / 1000000),
-              ).toISOString()
-            : undefined;
+  ? (() => {
+      const seconds = item.value.timestamp.seconds;
+      const secondsValue =
+        typeof seconds === 'number'
+          ? seconds
+          : typeof seconds === 'bigint'
+            ? Number(seconds)
+            : Number(seconds?.low ?? seconds);
+
+      const nanos = Number(item.value.timestamp.nanos ?? 0);
+      const date = new Date(secondsValue * 1000 + Math.floor(nanos / 1000000));
+
+      return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+    })()
+  : undefined;
           const value = item.value.value?.length ? (JSON.parse(item.value.value.toString()) as Batch) : undefined;
 
           results.push({
@@ -409,7 +426,8 @@ export class HoneyChainContract extends Contract {
   public async verifyBatch(ctx: Context, batchId: string): Promise<string> {
     this.requireString(batchId, 'batchId');
     const batch = await this.getAsset<Batch>(ctx, this.batchKey(batchId), `Batch ${batchId} does not exist`);
-    const presentEvents = new Set(batch.events.map((event) => event.eventType));
+    const eventTypes = batch.events.map((event) => event.eventType);
+    const presentEvents = new Set(eventTypes);
     const reasons: string[] = [];
 
     if (!presentEvents.has('PROCESSING')) {
@@ -420,6 +438,9 @@ export class HoneyChainContract extends Contract {
     }
     if (!presentEvents.has('PACKAGING')) {
       reasons.push('Packaging event missing');
+    }
+    if (!this.isOrderedChainOfCustody(eventTypes)) {
+      reasons.push('Processing, transport, and packaging events are out of order');
     }
     if (batch.quantity <= 0) {
       reasons.push('Batch quantity must be greater than zero');
@@ -462,6 +483,11 @@ export class HoneyChainContract extends Contract {
     const batch = await this.getAsset<Batch>(ctx, this.batchKey(batchId), `Batch ${batchId} does not exist`);
     if (batch.events.some((existing) => existing.eventId === event.eventId)) {
       throw new Error(`Event ${event.eventId} already exists on batch ${batchId}`);
+    }
+
+    const eventTypes = [...batch.events.map((existing) => existing.eventType), event.eventType];
+    if (!this.isOrderedChainOfCustody(eventTypes)) {
+      throw new Error('Provenance events must follow Processing, Transport, Packaging order');
     }
 
     const statusByEvent: Record<EventType, BatchStatus> = {
@@ -523,6 +549,29 @@ export class HoneyChainContract extends Contract {
     if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
       throw new Error(`${field} must be a positive number`);
     }
+  }
+
+  private isOrderedChainOfCustody(eventTypes: EventType[]): boolean {
+    const requiredTypes: EventType[] = ['PROCESSING', 'TRANSPORT', 'PACKAGING'];
+    let nextRequiredIndex = 0;
+
+    for (const eventType of eventTypes) {
+      if (eventType === 'CERTIFICATION') {
+        if (nextRequiredIndex < requiredTypes.length) {
+          return false;
+        }
+        continue;
+      }
+
+      const currentIndex = requiredTypes.indexOf(eventType);
+      if (currentIndex !== nextRequiredIndex) {
+        return false;
+      }
+
+      nextRequiredIndex += 1;
+    }
+
+    return true;
   }
 
   private toBuffer(value: unknown): Buffer {
