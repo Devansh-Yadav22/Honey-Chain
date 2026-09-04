@@ -3,10 +3,18 @@ import { config } from './env';
 
 const { Pool } = pg;
 
+const isRemoteDb = 
+  config.databaseUrl.includes('supabase.co') || 
+  config.databaseUrl.includes('pooler.supabase.com') || 
+  config.databaseUrl.includes('render.com') || 
+  config.databaseUrl.includes('sslmode=require') ||
+  (config.env === 'production' && !config.databaseUrl.includes('localhost'));
+
 export const pool = new Pool({
   connectionString: config.databaseUrl,
+  ssl: isRemoteDb ? { rejectUnauthorized: false } : undefined,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 10000,
 });
 
 pool.on('error', (err) => {

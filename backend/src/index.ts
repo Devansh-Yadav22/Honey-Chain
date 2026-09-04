@@ -23,7 +23,24 @@ import provenanceRoutes from './routes/provenance.routes';
 
 const app = express();
 
-app.use(cors());
+const frontendUrl = process.env.FRONTEND_URL || '';
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      !frontendUrl ||
+      origin === frontendUrl ||
+      origin.endsWith('.vercel.app') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Request logging middleware
@@ -95,8 +112,8 @@ const PORT = config.port;
 
 async function startServer() {
   await initDb();
-  app.listen(PORT, () => {
-    console.log(`🚀 Honey Chain Backend API Server running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Honey Chain Backend API Server running on port ${PORT}`);
   });
 }
 

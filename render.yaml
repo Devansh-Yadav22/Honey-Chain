@@ -1,0 +1,42 @@
+services:
+  # 1. Honey Chain REST API Backend
+  - type: web
+    name: honeychain-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        value: honey-chain-f3563
+      - key: FIREBASE_CLIENT_EMAIL
+        value: firebase-adminsdk-fbsvc@honey-chain-f3563.iam.gserviceaccount.com
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+
+  # 2. Honey Chain AI & Anomaly Service (FastAPI)
+  - type: web
+    name: honeychain-ai
+    runtime: python
+    rootDir: ai
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENV
+        value: production
+      - key: SERVICE_NAME
+        value: honey-chain-ai

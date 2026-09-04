@@ -39,19 +39,77 @@ function getHomeTabForRole(role: Role): string {
   }
 }
 
+function getTabFromPath(): string | null {
+  if (typeof window === 'undefined') return null;
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  if (!path) return null;
+
+  if (path.startsWith('passport/')) {
+    const batchId = path.split('/')[1];
+    return batchId ? `passport-${batchId}` : 'passport-search';
+  }
+  if (path === 'passport') return 'passport-search';
+  if (path === 'transport') return 'transporter';
+  if (path === 'packaging') return 'packager';
+
+  const validTabs = [
+    'login', 'admin', 'beekeeper', 'processor', 'transporter', 
+    'packager', 'quality', 'hives', 'batches', 'live-demo', 'dashboard'
+  ];
+  if (validTabs.includes(path)) return path;
+  return null;
+}
+
 function MainApp() {
   const { currentRole, isAuthenticated, loading } = useAuth();
   const [currentTab, setCurrentTab] = useState<string>(() => {
+    const fromPath = getTabFromPath();
+    if (fromPath) return fromPath;
     return isAuthenticated ? getHomeTabForRole(currentRole) : 'login';
   });
   const [searchBatchId, setSearchBatchId] = useState<string>('HC-2026-0001');
 
+  // Sync state when browser back/forward buttons are clicked
+  useEffect(() => {
+    const handlePopState = () => {
+      const fromPath = getTabFromPath();
+      if (fromPath) {
+        setCurrentTab(fromPath);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync URL in browser address bar when tab changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let targetPath = '/';
+    if (currentTab.startsWith('passport-') && currentTab !== 'passport-search') {
+      const id = currentTab.replace('passport-', '');
+      targetPath = `/passport/${id}`;
+    } else if (currentTab === 'passport-search') {
+      targetPath = '/passport';
+    } else if (currentTab === 'transporter') {
+      targetPath = '/transport';
+    } else if (currentTab === 'packager') {
+      targetPath = '/packaging';
+    } else if (currentTab && currentTab !== 'dashboard') {
+      targetPath = `/${currentTab}`;
+    }
+
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ tab: currentTab }, '', targetPath);
+    }
+  }, [currentTab]);
+
   // Update default landing tab when auth state resolves
   useEffect(() => {
     if (!loading) {
+      const fromPath = getTabFromPath();
       if (!isAuthenticated && !currentTab.startsWith('passport-') && currentTab !== 'live-demo') {
         setCurrentTab('login');
-      } else if (isAuthenticated && currentTab === 'login') {
+      } else if (isAuthenticated && currentTab === 'login' && !fromPath) {
         setCurrentTab(getHomeTabForRole(currentRole));
       }
     }
