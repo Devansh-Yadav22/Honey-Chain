@@ -13,17 +13,25 @@ export async function createBatch(data: {
   floralSource?: string;
   hiveId?: string;
   beekeeperId?: string;
+  beekeeperName?: string;
+  companyId?: string;
+  companyName?: string;
+  provenanceModel?: 'DIRECT_BEEKEEPER' | 'COMPANY_MANAGED';
   id?: string;
   actorId?: string;
   actorName?: string;
 }): Promise<Batch> {
+  // Validate model server-side
+  const model: 'DIRECT_BEEKEEPER' | 'COMPANY_MANAGED' = 
+    data.provenanceModel === 'DIRECT_BEEKEEPER' ? 'DIRECT_BEEKEEPER' : 'COMPANY_MANAGED';
+
   const nextNum = memoryStore.batches.size + 1;
   const padded = String(nextNum).padStart(4, '0');
   const batchId = data.id || `HC-2026-${padded}`;
 
   let harvestId = data.harvestId;
   let harvest: Harvest | undefined;
-  let status: BatchStatus = 'HARVESTED';
+  let status: BatchStatus = model === 'DIRECT_BEEKEEPER' ? 'VERIFIED' : 'HARVESTED';
 
   if (harvestId) {
     harvest = memoryStore.harvests.get(harvestId);
@@ -49,7 +57,7 @@ export async function createBatch(data: {
       floralSource: data.floralSource || 'Mustard Blossom',
       moisturePercent: 18.0,
       location: { lat: 28.6139, lng: 77.2090 },
-      notes: 'Logged via beekeeper workspace'
+      notes: model === 'DIRECT_BEEKEEPER' ? 'Direct beekeeper harvest batch' : 'Logged via beekeeper workspace'
     };
     memoryStore.harvests.set(harvestId, harvest);
   }
@@ -58,14 +66,18 @@ export async function createBatch(data: {
 
   const newBatch: Batch = {
     id: batchId,
+    provenanceModel: model,
     harvestId,
     hiveId: data.hiveId || harvest?.hiveId || 'HIVE-001',
     beekeeperId: data.beekeeperId || harvest?.beekeeperId || 'BK-001',
+    beekeeperName: data.beekeeperName || data.actorName || (model === 'DIRECT_BEEKEEPER' ? 'Registered Apiarist' : undefined),
+    companyId: data.companyId,
+    companyName: data.companyName,
     quantity: data.quantity,
     origin: data.origin,
     floralSource: data.floralSource || harvest?.floralSource || 'Multifloral Blossom',
     status,
-    currentCustodian: data.actorName || 'Himalayan Apiary Cooperative',
+    currentCustodian: data.actorName || (model === 'DIRECT_BEEKEEPER' ? 'Registered Beekeeper' : 'Himalayan Apiary Cooperative'),
     custodianRole: 'BEEKEEPER',
     blockchainTxId: tx.txId,
     blockchainStatus: tx.status,
@@ -77,9 +89,13 @@ export async function createBatch(data: {
 
   try {
     await query(
-      `INSERT INTO batches (id, harvest_id, quantity, origin, status, blockchain_tx_id, blockchain_status, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (id) DO UPDATE SET quantity = EXCLUDED.quantity, status = EXCLUDED.status`,
+      `INSERT INTO batches (id, harvest_id, quantity, origin, status, blockchain_tx_id, blockchain_status, provenance_model, company_id, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       ON CONFLICT (id) DO UPDATE SET 
+         quantity = EXCLUDED.quantity, 
+         status = EXCLUDED.status, 
+         provenance_model = EXCLUDED.provenance_model,
+         company_id = EXCLUDED.company_id`,
       [
         batchId,
         data.harvestId || null,
@@ -88,6 +104,8 @@ export async function createBatch(data: {
         status,
         tx.txId,
         tx.status,
+        model,
+        data.companyId || null,
         newBatch.createdAt
       ]
     );
@@ -100,13 +118,13 @@ export async function createBatch(data: {
     actorId: data.actorId || 'USR-BEE-01',
     actorName: data.actorName || 'Rajesh Kumar Verma',
     role: 'BEEKEEPER',
-    organizationId: 'ORG-BEE-01',
-    organizationName: 'Himalayan Apiary Cooperative',
-    action: 'BATCH_CREATED',
+    organizationId: data.companyId || 'ORG-BEE-01',
+    organizationName: data.companyName || 'Himalayan Apiary Cooperative',
+    action: model === 'DIRECT_BEEKEEPER' ? 'DIRECT_BATCH_CREATED' : 'BATCH_CREATED',
     resourceType: 'BATCH',
     resourceId: batchId,
     result: 'SUCCESS',
-    details: { quantityKg: data.quantity, origin: data.origin, fabricTxId: tx.txId }
+    details: { provenanceModel: model, quantityKg: data.quantity, origin: data.origin, fabricTxId: tx.txId }
   });
 
   return store.populateBatch(newBatch);

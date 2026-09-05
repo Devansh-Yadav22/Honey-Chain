@@ -15,6 +15,7 @@ function invoke() {
     -n "$CHAINCODE_NAME" \
     --peerAddresses "$CORE_PEER_ADDRESS" \
     --tlsRootCertFiles "$CORE_PEER_TLS_ROOTCERT_FILE" \
+    --waitForEvent \
     -c "$1"
 }
 
@@ -23,8 +24,8 @@ function query() {
 }
 
 invoke '{"function":"registerHive","Args":["{\"hiveId\":\"HIVE-001\",\"beekeeperId\":\"BK-001\",\"location\":{\"lat\":28.6139,\"lng\":77.209,\"state\":\"Delhi\",\"country\":\"India\"},\"installationDate\":\"2026-09-01\",\"status\":\"NORMAL\"}"]}' || true
-invoke '{"function":"createHarvest","Args":["{\"harvestId\":\"HARVEST-2026-0001\",\"hiveId\":\"HIVE-001\",\"quantity\":18,\"harvestDate\":\"2026-09-02T18:30:00Z\",\"evidenceRef\":\"iot-summary:HIVE-001:2026-09-02\"}"]}'
-invoke '{"function":"createBatch","Args":["{\"batchId\":\"HC-2026-0001\",\"harvestId\":\"HARVEST-2026-0001\"}"]}'
+invoke '{"function":"createHarvest","Args":["{\"harvestId\":\"HARVEST-2026-0001\",\"hiveId\":\"HIVE-001\",\"quantity\":18,\"harvestDate\":\"2026-09-02T18:30:00Z\",\"evidenceRef\":\"iot-summary:HIVE-001:2026-09-02\"}"]}' || true
+invoke '{"function":"createBatch","Args":["{\"batchId\":\"HC-2026-0001\",\"harvestId\":\"HARVEST-2026-0001\"}"]}' || true
 invoke '{"function":"addProcessingEvent","Args":["HC-2026-0001","{\"processorId\":\"PROC-001\",\"eventType\":\"FILTERING\",\"details\":{\"facility\":\"Bee-Tech Processing Unit\"}}"]}'
 invoke '{"function":"addTransportEvent","Args":["HC-2026-0001","{\"transporterId\":\"TRANS-001\",\"source\":\"Bee-Tech Processing Unit\",\"destination\":\"Packaging Center Delhi\"}"]}'
 invoke '{"function":"addPackagingEvent","Args":["HC-2026-0001","{\"packagerId\":\"PACK-001\",\"productId\":\"JAR-HC-2026-0001\"}"]}'

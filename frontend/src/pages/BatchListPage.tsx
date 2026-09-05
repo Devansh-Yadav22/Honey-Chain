@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Package, ArrowRight } from 'lucide-react';
+import { Package, ArrowRight, User, Building2 } from 'lucide-react';
 import { Batch } from '../types';
 import { getBatches } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
+import { useTranslation } from '../context/I18nContext';
 
 interface BatchListPageProps {
   onSelectBatch: (id: string) => void;
@@ -11,6 +12,7 @@ interface BatchListPageProps {
 export const BatchListPage: React.FC<BatchListPageProps> = ({ onSelectBatch }) => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'VERIFIED' | 'SUSPICIOUS'>('ALL');
+  const { t } = useTranslation();
 
   useEffect(() => {
     getBatches().then(setBatches);
@@ -65,35 +67,45 @@ export const BatchListPage: React.FC<BatchListPageProps> = ({ onSelectBatch }) =
       </div>
 
       <div className="space-y-3.5">
-        {filteredBatches.map((batch) => (
-          <div
-            key={batch.id}
-            onClick={() => onSelectBatch(batch.id)}
-            className="panel-card panel-card-hover p-5 rounded-2xl cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
-          >
-            <div className="space-y-1.5">
-              <div className="flex items-center space-x-3">
-                <span className="font-mono font-bold text-lg text-amber-900">{batch.id}</span>
-                <StatusBadge status={batch.status} />
+        {filteredBatches.map((batch) => {
+          const isDirect = batch.provenanceModel === 'DIRECT_BEEKEEPER';
+          return (
+            <div
+              key={batch.id}
+              onClick={() => onSelectBatch(batch.id)}
+              className="panel-card panel-card-hover p-5 rounded-2xl cursor-pointer flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center space-x-3">
+                  <span className="font-mono font-bold text-lg text-amber-900">{batch.id}</span>
+                  <StatusBadge status={batch.status} />
+                  <span className={`inline-flex items-center text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                    isDirect ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-purple-50 text-purple-800 border-purple-200'
+                  }`}>
+                    {isDirect ? <User className="w-3 h-3 mr-1" /> : <Building2 className="w-3 h-3 mr-1" />}
+                    {isDirect ? t('provenance.directBeekeeper') : t('provenance.companyManaged')}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-700 font-medium">Origin: {batch.origin}</p>
+                <p className="text-[11px] text-stone-400 font-mono">Blockchain Tx: {batch.blockchainTxId || 'Pending Confirmation'}</p>
               </div>
-              <p className="text-xs text-stone-700 font-medium">Origin: {batch.origin}</p>
-              <p className="text-[11px] text-stone-400 font-mono">Blockchain Tx: {batch.blockchainTxId || 'Pending Confirmation'}</p>
-            </div>
 
-            <div className="flex items-center justify-between md:justify-end space-x-6 border-t md:border-t-0 border-stone-200 pt-3 md:pt-0">
-              <div className="text-left md:text-right">
-                <p className="text-xs text-stone-500 font-medium">Batch Quantity</p>
-                <p className="font-bold text-stone-900 text-lg">{batch.quantity} kg</p>
+              <div className="flex items-center justify-between md:justify-end space-x-6 border-t md:border-t-0 border-stone-200 pt-3 md:pt-0">
+                <div className="text-left md:text-right">
+                  <p className="text-xs text-stone-500 font-medium">Batch Quantity</p>
+                  <p className="font-bold text-stone-900 text-lg">{batch.quantity} kg</p>
+                </div>
+
+                <button className="px-4 py-2 bg-stone-50 hover:bg-amber-600 hover:text-white text-stone-800 border border-stone-200 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs">
+                  <span>Timeline</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-
-              <button className="px-4 py-2 bg-stone-50 hover:bg-amber-600 hover:text-white text-stone-800 border border-stone-200 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition shadow-2xs">
-                <span>Timeline</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 };
+

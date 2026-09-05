@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { I18nProvider } from './context/I18nContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
+import { LandingPage } from './pages/LandingPage';
+import { VerifyHoneyModal } from './components/VerifyHoneyModal';
 import { DashboardPage } from './pages/DashboardPage';
 import { HiveListPage } from './pages/HiveListPage';
 import { HiveDetailPage } from './pages/HiveDetailPage';
@@ -35,25 +38,25 @@ function getHomeTabForRole(role: Role): string {
       return 'quality';
     case 'CONSUMER':
     default:
-      return 'passport-search';
+      return 'landing';
   }
 }
 
 function getTabFromPath(): string | null {
   if (typeof window === 'undefined') return null;
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
-  if (!path) return null;
+  if (!path) return 'landing';
 
   if (path.startsWith('passport/')) {
     const batchId = path.split('/')[1];
-    return batchId ? `passport-${batchId}` : 'passport-search';
+    return batchId ? `passport-${batchId}` : 'landing';
   }
-  if (path === 'passport') return 'passport-search';
+  if (path === 'passport') return 'landing';
   if (path === 'transport') return 'transporter';
   if (path === 'packaging') return 'packager';
 
   const validTabs = [
-    'login', 'admin', 'beekeeper', 'processor', 'transporter', 
+    'landing', 'login', 'admin', 'beekeeper', 'processor', 'transporter', 
     'packager', 'quality', 'hives', 'batches', 'live-demo', 'dashboard'
   ];
   if (validTabs.includes(path)) return path;
@@ -65,9 +68,10 @@ function MainApp() {
   const [currentTab, setCurrentTab] = useState<string>(() => {
     const fromPath = getTabFromPath();
     if (fromPath) return fromPath;
-    return isAuthenticated ? getHomeTabForRole(currentRole) : 'login';
+    return isAuthenticated ? getHomeTabForRole(currentRole) : 'landing';
   });
   const [searchBatchId, setSearchBatchId] = useState<string>('HC-2026-0001');
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
 
   // Sync state when browser back/forward buttons are clicked
   useEffect(() => {
@@ -88,8 +92,8 @@ function MainApp() {
     if (currentTab.startsWith('passport-') && currentTab !== 'passport-search') {
       const id = currentTab.replace('passport-', '');
       targetPath = `/passport/${id}`;
-    } else if (currentTab === 'passport-search') {
-      targetPath = '/passport';
+    } else if (currentTab === 'passport-search' || currentTab === 'landing') {
+      targetPath = '/';
     } else if (currentTab === 'transporter') {
       targetPath = '/transport';
     } else if (currentTab === 'packager') {
@@ -107,9 +111,12 @@ function MainApp() {
   useEffect(() => {
     if (!loading) {
       const fromPath = getTabFromPath();
-      if (!isAuthenticated && !currentTab.startsWith('passport-') && currentTab !== 'live-demo') {
-        setCurrentTab('login');
-      } else if (isAuthenticated && currentTab === 'login' && !fromPath) {
+      if (!isAuthenticated && !currentTab.startsWith('passport-') && currentTab !== 'live-demo' && currentTab !== 'landing') {
+        if (currentTab !== 'login') {
+          // If accessing protected tab when unauth, go to login
+          setCurrentTab('login');
+        }
+      } else if (isAuthenticated && (currentTab === 'login' || currentTab === 'landing') && !fromPath) {
         setCurrentTab(getHomeTabForRole(currentRole));
       }
     }
@@ -126,52 +133,25 @@ function MainApp() {
   };
 
   const renderContent = () => {
-    // 1. Public Passport details (ALWAYS accessible without login)
+    // 1. Public Landing Page (Default for root / unauth)
+    if (currentTab === 'landing') {
+      return (
+        <LandingPage
+          onVerifyBatch={handleSearchPassport}
+          onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+          onNavigateLogin={() => setCurrentTab('login')}
+        />
+      );
+    }
+
+    // 2. Public Passport details (ALWAYS accessible without login)
     if (currentTab.startsWith('passport-') && currentTab !== 'passport-search') {
       const batchId = currentTab.replace('passport-', '');
       return (
         <HoneyPassportPage 
           batchId={batchId} 
-          onBack={() => setCurrentTab(isAuthenticated ? getHomeTabForRole(currentRole) : 'passport-search')} 
+          onBack={() => setCurrentTab(isAuthenticated ? getHomeTabForRole(currentRole) : 'landing')} 
         />
-      );
-    }
-
-    // 2. Public Passport lookup
-    if (currentTab === 'passport-search') {
-      return (
-        <div className="max-w-xl mx-auto py-12 px-6 bg-white rounded-2xl border border-[#EAE3D9] shadow-sm space-y-6 text-center">
-          <div className="w-12 h-12 mx-auto rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-2xl">
-            🍯
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-stone-900">Digital Honey Passport QR Lookup</h2>
-            <p className="text-xs text-stone-500 mt-1">Enter a public batch identifier to inspect verified provenance</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              value={searchBatchId}
-              onChange={(e) => setSearchBatchId(e.target.value)}
-              placeholder="e.g. HC-2026-0001 or HC-2026-0003"
-              className="flex-1 bg-[#FAF8F5] border border-[#EAE3D9] rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder-stone-400 outline-none focus:border-amber-600 focus:bg-white transition"
-            />
-            <button
-              onClick={() => setCurrentTab(`passport-${searchBatchId}`)}
-              className="bg-amber-700 hover:bg-amber-800 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition shadow-sm"
-            >
-              Inspect Passport
-            </button>
-          </div>
-          <div className="pt-4 border-t border-stone-100 text-xs text-stone-500 flex justify-center space-x-4">
-            <button onClick={() => handleSearchPassport('HC-2026-0001')} className="text-amber-800 font-medium hover:underline">
-              Try HC-2026-0001 (Verified)
-            </button>
-            <button onClick={() => handleSearchPassport('HC-2026-0003')} className="text-rose-800 font-medium hover:underline">
-              Try HC-2026-0003 (Suspicious)
-            </button>
-          </div>
-        </div>
       );
     }
 
@@ -185,7 +165,7 @@ function MainApp() {
       return (
         <LoginPage 
           onSuccessRedirect={handleLoginSuccess}
-          onOpenPublicPassport={() => setCurrentTab('passport-search')}
+          onOpenPublicPassport={() => setCurrentTab('landing')}
         />
       );
     }
@@ -238,7 +218,12 @@ function MainApp() {
             />
           );
         }
-        return <BeekeeperPortal onNavigateToBatch={(id) => setCurrentTab(`batch-${id}`)} />;
+        return (
+          <BeekeeperPortal 
+            onNavigateToBatch={(id) => setCurrentTab(`batch-${id}`)} 
+            onOpenPassport={(id) => handleSearchPassport(id)}
+          />
+        );
 
       case 'processor':
         if (currentRole !== 'PROCESSOR' && currentRole !== 'ADMIN') {
@@ -304,32 +289,47 @@ function MainApp() {
     }
   };
 
-  const isFullPageLogin = !isAuthenticated && currentTab === 'login';
+  const isFullPage = currentTab === 'landing' || (!isAuthenticated && currentTab === 'login');
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-sans">
       <Navbar 
         onSearchPassport={handleSearchPassport} 
         onNavigateLogin={() => setCurrentTab('login')} 
+        onNavigateHome={() => setCurrentTab(isAuthenticated ? getHomeTabForRole(currentRole) : 'landing')}
+        onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
       />
       <div className="flex flex-1">
-        {!isFullPageLogin && (
+        {!isFullPage && (
           <Sidebar currentTab={currentTab} onTabSelect={setCurrentTab} />
         )}
-        <main className={`flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full ${isFullPageLogin ? 'flex items-center justify-center' : ''}`}>
+        <main className={`flex-1 ${currentTab === 'landing' ? 'p-0 w-full' : 'p-5 md:p-8 max-w-7xl mx-auto w-full'} ${!isAuthenticated && currentTab === 'login' ? 'flex items-center justify-center' : ''}`}>
           {renderContent()}
         </main>
       </div>
+
+      {/* Quick QR & Batch Lookup Modal */}
+      <VerifyHoneyModal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        onVerifyBatch={(id) => {
+          setIsVerifyModalOpen(false);
+          handleSearchPassport(id);
+        }}
+      />
     </div>
   );
 }
 
 export function App() {
   return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
+    <I18nProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
+    </I18nProvider>
   );
 }
 
 export default App;
+

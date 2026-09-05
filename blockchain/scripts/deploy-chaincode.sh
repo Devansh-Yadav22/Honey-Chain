@@ -23,7 +23,7 @@ peer lifecycle chaincode package "${CHAINCODE_NAME}.tar.gz" \
   --label "$CHAINCODE_LABEL"
 
 echo "Installing chaincode on ${CORE_PEER_ADDRESS}..."
-peer lifecycle chaincode install "${CHAINCODE_NAME}.tar.gz"
+peer lifecycle chaincode install "${CHAINCODE_NAME}.tar.gz" || true
 
 PACKAGE_ID="$(peer lifecycle chaincode queryinstalled | sed -n "s/^Package ID: \(${CHAINCODE_LABEL}:[^,]*\), Label: ${CHAINCODE_LABEL}$/\1/p" | head -n 1)"
 

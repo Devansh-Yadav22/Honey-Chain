@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Package, QrCode, Database, Cpu } from 'lucide-react';
+import { ArrowLeft, Package, QrCode, Database, Cpu, User, Building2 } from 'lucide-react';
 import { Batch } from '../types';
 import { getBatchById } from '../services/api';
 import { StatusBadge } from '../components/StatusBadge';
 import { Timeline } from '../components/Timeline';
 import { QrModal } from '../components/QrModal';
+import { useTranslation } from '../context/I18nContext';
 
 interface BatchDetailPageProps {
   batchId: string;
@@ -15,16 +16,18 @@ interface BatchDetailPageProps {
 export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBack, onOpenPassport }) => {
   const [batch, setBatch] = useState<Batch | null>(null);
   const [showQr, setShowQr] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     getBatchById(batchId).then(setBatch);
   }, [batchId]);
 
   if (!batch) {
-    return <div className="p-12 text-center text-stone-500 font-medium">Loading batch details...</div>;
+    return <div className="p-12 text-center text-stone-500 font-medium">{t('common.loading')}</div>;
   }
 
   const isSuspicious = batch.status === 'SUSPICIOUS';
+  const isDirect = batch.provenanceModel === 'DIRECT_BEEKEEPER';
 
   return (
     <div className="space-y-6">
@@ -32,7 +35,7 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
         onClick={onBack}
         className="inline-flex items-center text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline transition"
       >
-        <ArrowLeft className="w-4 h-4 mr-1" /> Back to Batch List
+        <ArrowLeft className="w-4 h-4 mr-1" /> {t('common.back')}
       </button>
 
       {/* Top Banner */}
@@ -41,8 +44,14 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
           <div className="flex items-center space-x-3">
             <span className="text-2xl font-bold font-mono text-amber-900">{batch.id}</span>
             <StatusBadge status={batch.status} />
+            <span className={`inline-flex items-center text-xs font-mono font-bold px-2.5 py-1 rounded-lg border ${
+              isDirect ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-purple-50 text-purple-800 border-purple-200'
+            }`}>
+              {isDirect ? <User className="w-3.5 h-3.5 mr-1 text-blue-700" /> : <Building2 className="w-3.5 h-3.5 mr-1 text-purple-700" />}
+              {isDirect ? t('provenance.directBeekeeper') : t('provenance.companyManaged')}
+            </span>
           </div>
-          <p className="text-xs text-stone-600 mt-1 font-medium">Origin: {batch.origin}</p>
+          <p className="text-xs text-stone-600 mt-1.5 font-medium">Origin: {batch.origin} • Floral: {batch.floralSource || 'Multifloral'}</p>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -62,7 +71,7 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
           <div className="panel-card p-6 rounded-2xl space-y-4 shadow-sm">
             <h3 className="font-bold text-stone-900 text-base flex items-center">
               <Package className="w-5 h-5 text-amber-700 mr-2" />
-              Supply Chain Chain-of-Custody Timeline
+              Chain-of-Custody Provenance Journey
             </h3>
             <Timeline batch={batch} />
           </div>
@@ -124,3 +133,4 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
     </div>
   );
 };
+

@@ -3,12 +3,20 @@ OrdererOrgs:
     Domain: honeychain.local
     Specs:
       - Hostname: orderer
+        SANS:
+          - "localhost"
+          - "127.0.0.1"
+          - "orderer.honeychain.local"
 
 PeerOrgs:
   - Name: Org1
     Domain: org1.honeychain.local
     EnableNodeOUs: true
-    Template:
-      Count: 1
+    Specs:
+      - Hostname: peer0
+        SANS:
+          - "localhost"
+          - "127.0.0.1"
+          - "peer0.org1.honeychain.local"
     Users:
       Count: 1

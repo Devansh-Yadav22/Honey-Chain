@@ -30,10 +30,10 @@ configtxgen \
 echo "Starting Honey Chain Fabric containers..."
 docker compose -f ../network/docker-compose.yaml up -d
 
-CHANNEL_BLOCK="../network/channel-artifacts/${CHANNEL_NAME}.block"
-ORDERER_ADMIN_CA="../network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/ca.crt"
-ORDERER_ADMIN_CERT="../network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/server.crt"
-ORDERER_ADMIN_KEY="../network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/server.key"
+CHANNEL_BLOCK="$BLOCKCHAIN_DIR/network/channel-artifacts/${CHANNEL_NAME}.block"
+ORDERER_ADMIN_CA="$BLOCKCHAIN_DIR/network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/ca.crt"
+ORDERER_ADMIN_CERT="$BLOCKCHAIN_DIR/network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/server.crt"
+ORDERER_ADMIN_KEY="$BLOCKCHAIN_DIR/network/organizations/ordererOrganizations/honeychain.local/orderers/orderer.honeychain.local/tls/server.key"
 
 echo "Joining ${CHANNEL_NAME} on the orderer..."
 joined=false

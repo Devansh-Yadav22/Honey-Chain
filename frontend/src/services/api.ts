@@ -322,6 +322,8 @@ export async function createBatch(data: {
   floralSource?: string;
   hiveId?: string;
   id?: string;
+  provenanceModel?: 'DIRECT_BEEKEEPER' | 'COMPANY_MANAGED';
+  companyId?: string;
 }): Promise<Batch | null> {
   return fetchJson<Batch>(`${API_BASE}/batches`, {
     method: 'POST',

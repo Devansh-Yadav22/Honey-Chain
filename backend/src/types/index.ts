@@ -1,3 +1,5 @@
+export type ProvenanceModel = 'DIRECT_BEEKEEPER' | 'COMPANY_MANAGED';
+
 export type Role = 
   | 'ADMIN' 
   | 'BEEKEEPER' 
@@ -319,9 +321,13 @@ export type BatchStatus =
 
 export interface Batch {
   id: string; // e.g. HC-2026-0001
+  provenanceModel?: ProvenanceModel;
   harvestId?: string;
   hiveId?: string;
   beekeeperId?: string;
+  beekeeperName?: string;
+  companyId?: string;
+  companyName?: string;
   quantity: number;
   origin: string;
   floralSource?: string;
@@ -419,11 +425,22 @@ export interface ProvenanceCheckResponse {
 
 export interface HoneyPassport {
   batchId: string;
+  provenanceModel?: ProvenanceModel;
   origin: string;
   quantity: number;
   floralSource?: string;
   status: string;
   createdAt: string;
+  company?: {
+    id: string;
+    name: string;
+    type?: string;
+  };
+  beekeeper?: {
+    id: string;
+    name: string;
+    location?: string;
+  };
   hive?: {
     id: string;
     location: Location;

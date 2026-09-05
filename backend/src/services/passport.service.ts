@@ -10,6 +10,8 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
   const batch = await getBatchById(batchId);
   if (!batch) return null;
 
+  const provenanceModel = batch.provenanceModel || 'COMPANY_MANAGED';
+
   let hiveInfo: HoneyPassport['hive'];
   if (batch.harvest?.hiveId) {
     const hive = await getHiveById(batch.harvest.hiveId);
@@ -61,13 +63,28 @@ export async function getHoneyPassport(batchId: string): Promise<HoneyPassport |
     }
   }
 
+  const beekeeperInfo = (batch.beekeeperId || batch.beekeeperName) ? {
+    id: batch.beekeeperId || 'BK-001',
+    name: batch.beekeeperName || 'Registered Apiarist',
+    location: batch.origin
+  } : undefined;
+
+  const companyInfo = (provenanceModel === 'COMPANY_MANAGED' && (batch.companyId || batch.companyName)) ? {
+    id: batch.companyId || 'ORG-PACK-01',
+    name: batch.companyName || 'PureFlora Honey Enterprises Ltd',
+    type: 'MANAGED_PRODUCTION_NETWORK'
+  } : undefined;
+
   return {
     batchId: batch.id,
+    provenanceModel,
     origin: batch.origin,
     quantity: batch.quantity,
     floralSource: batch.floralSource || batch.harvest?.floralSource || 'Multifloral Blossom',
     status: batch.status,
     createdAt: batch.createdAt || new Date().toISOString(),
+    beekeeper: beekeeperInfo,
+    company: companyInfo,
     hive: hiveInfo,
     harvest: batch.harvest,
     timeline: {
