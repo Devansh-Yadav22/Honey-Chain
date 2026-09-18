@@ -17,10 +17,10 @@ export const HiveListPage: React.FC<HiveListPageProps> = ({ onSelectHive }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D9] pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/80 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900 flex items-center tracking-tight">
-            <Hexagon className="w-6 h-6 text-amber-600 mr-2.5" />
+          <h1 className="text-2xl font-bold text-stone-900 flex items-center tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <Hexagon className="w-6 h-6 text-[#3D5A3A] mr-2.5" />
             Smart Hive Intelligence
           </h1>
           <p className="text-xs text-stone-600 mt-1">
@@ -32,17 +32,17 @@ export const HiveListPage: React.FC<HiveListPageProps> = ({ onSelectHive }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {hives.map((hive) => {
           const score = hive.status === 'CRITICAL' ? (hive.id === 'HIVE-005' ? 38 : hive.id === 'HIVE-006' ? 40 : 42) : hive.status === 'WARNING' ? 65 : 95;
-          const scoreColor = hive.status === 'CRITICAL' ? 'text-rose-800' : hive.status === 'WARNING' ? 'text-amber-800' : 'text-emerald-800';
-          const barColor = hive.status === 'CRITICAL' ? 'bg-rose-600' : hive.status === 'WARNING' ? 'bg-amber-600' : 'bg-emerald-600';
+          const scoreColor = hive.status === 'CRITICAL' ? 'text-rose-800' : hive.status === 'WARNING' ? 'text-amber-800' : 'text-[#3D5A3A]';
+          const barColor = hive.status === 'CRITICAL' ? 'bg-rose-600' : hive.status === 'WARNING' ? 'bg-amber-600' : 'bg-[#3D5A3A]';
 
           return (
             <div
               key={hive.id}
               onClick={() => onSelectHive(hive.id)}
-              className="panel-card panel-card-hover p-6 rounded-2xl cursor-pointer space-y-4 group shadow-sm"
+              className="panel-card panel-card-hover p-6 rounded-2xl cursor-pointer space-y-4 group shadow-sm border border-stone-200/80"
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono font-bold text-lg text-amber-900 group-hover:text-amber-700 transition">{hive.id}</span>
+                <span className="font-mono font-bold text-lg text-stone-900 group-hover:text-[#3D5A3A] transition" style={{ fontFamily: "'Outfit', sans-serif" }}>{hive.id}</span>
                 <StatusBadge status={hive.status} size="sm" />
               </div>
 
@@ -68,7 +68,7 @@ export const HiveListPage: React.FC<HiveListPageProps> = ({ onSelectHive }) => {
                 </div>
               </div>
 
-              <button className="w-full mt-2 py-2.5 bg-stone-50 group-hover:bg-amber-600 group-hover:text-white text-stone-800 border border-stone-200 group-hover:border-amber-600 rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition duration-200 shadow-2xs">
+              <button className="w-full mt-2 py-2.5 bg-stone-50 group-hover:bg-[#3D5A3A] group-hover:text-white text-stone-800 border border-stone-200 group-hover:border-[#3D5A3A] rounded-full text-xs font-semibold flex items-center justify-center space-x-1.5 transition duration-200 shadow-2xs">
                 <span>View Telemetry & AI Model Analysis</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>

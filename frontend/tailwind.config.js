@@ -6,7 +6,25 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
+        serif: ['Playfair Display', 'serif'],
+      },
       colors: {
+        forest: {
+          50: '#F4F7F3',
+          100: '#E8EFE7',
+          200: '#D2DFD0',
+          300: '#AEC5AB',
+          400: '#7F9E7B',
+          500: '#587B54',
+          600: '#466743',
+          700: '#3D5A3A',
+          800: '#2E4A2E',
+          900: '#1E351C',
+          950: '#11200F',
+        },
         amber: {
           50: '#fffbeb',
           100: '#fef3c7',

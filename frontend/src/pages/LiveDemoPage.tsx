@@ -411,7 +411,7 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
             {!demoActive ? (
               <button
                 onClick={startNewDemo}
-                className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
+                className="inline-flex items-center px-5 py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
               >
                 <Play className="w-4 h-4 mr-1.5 fill-white" /> Start Live Demo
               </button>
@@ -419,15 +419,15 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
               <>
                 <button
                   onClick={startNewDemo}
-                  className="inline-flex items-center px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold rounded-xl border border-amber-300 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-forest-100 hover:bg-forest-200 text-forest-900 text-xs font-semibold rounded-full border border-forest-300 transition cursor-pointer"
                 >
-                  <Sparkles className="w-4 h-4 mr-1.5" /> New Demo Session
+                  <Sparkles className="w-4 h-4 mr-1.5 text-[#3D5A3A]" /> New Demo Session
                 </button>
                 <button
                   onClick={resetDemo}
-                  className="inline-flex items-center px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-[#EAE3D9] transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold rounded-full border border-stone-200 transition cursor-pointer"
                 >
-                  <RotateCcw className="w-4 h-4 mr-1.5" /> Reset
+                  <RotateCcw className="w-4 h-4 mr-1.5 text-stone-500" /> Reset
                 </button>
               </>
             )}
@@ -465,7 +465,7 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
       </div>
 
       {/* Prominent Pipeline Flow Visualizer */}
-      <div className="bg-white border border-[#EAE3D9] rounded-2xl p-5 shadow-xs space-y-3">
+      <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-xs space-y-3">
         <h2 className="text-xs font-bold font-mono text-stone-600 uppercase tracking-wider">
           End-to-End Traceability Pipeline State
         </h2>
@@ -509,10 +509,10 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
         {/* Left Column: Interactive Pipeline Steps */}
         <div className="lg:col-span-2 space-y-5">
           {/* STEP 1: Hive Selection */}
-          <div className="bg-white border border-[#EAE3D9] rounded-xl p-5 space-y-3 shadow-xs">
+          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 space-y-3 shadow-xs">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-stone-900 text-sm flex items-center">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center mr-2 font-mono">1</span>
+              <h3 className="font-bold text-stone-900 text-sm flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <span className="w-5 h-5 rounded-full bg-forest-100 text-[#3D5A3A] text-xs flex items-center justify-center mr-2 font-mono font-bold">1</span>
                 Apiary Hive Selection
               </h3>
               {getBadgeForStep(stepStates.hive)}
@@ -543,10 +543,10 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
           </div>
 
           {/* STEP 2 & 3: Telemetry Ingestion & Real AI Analysis */}
-          <div className="bg-white border border-[#EAE3D9] rounded-xl p-5 space-y-4 shadow-xs">
+          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-stone-900 text-sm flex items-center">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-xs flex items-center justify-center mr-2 font-mono">2</span>
+              <h3 className="font-bold text-stone-900 text-sm flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <span className="w-5 h-5 rounded-full bg-forest-100 text-[#3D5A3A] text-xs flex items-center justify-center mr-2 font-mono font-bold">2</span>
                 IoT Telemetry Ingestion & AI Model Inference
               </h3>
               <div className="flex space-x-2">
@@ -654,7 +654,7 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
               <button
                 onClick={handleCreateBatch}
                 disabled={!demoActive || stepStates.telemetry === 'PENDING' || stepStates.batch === 'COMPLETED' || loadingStep === 'batch'}
-                className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-semibold shadow-xs disabled:opacity-50 transition flex items-center"
+                className="px-5 py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white rounded-full text-xs font-semibold shadow-xs disabled:opacity-50 transition flex items-center cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5 mr-1.5" />
                 {loadingStep === 'batch' ? 'Submitting to Fabric...' : 'Create Batch & Submit Fabric Transaction'}
@@ -757,7 +757,7 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
               <button
                 onClick={handleVerifyProvenance}
                 disabled={!packagingDone || loadingStep === 'verification'}
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-xs disabled:opacity-50 transition flex items-center"
+                className="px-5 py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white rounded-full text-xs font-semibold shadow-xs disabled:opacity-50 transition flex items-center cursor-pointer"
               >
                 <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
                 Verify Batch Provenance on Fabric
@@ -767,14 +767,14 @@ export const LiveDemoPage: React.FC<{ onOpenPassport: (batchId: string) => void 
                 <>
                   <button
                     onClick={() => setShowQrModal(true)}
-                    className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-xs font-semibold border border-[#EAE3D9] transition flex items-center"
+                    className="px-4 py-2 bg-white hover:bg-stone-50 text-stone-800 rounded-full text-xs font-semibold border border-stone-200 transition flex items-center cursor-pointer shadow-2xs"
                   >
-                    <QrCode className="w-3.5 h-3.5 mr-1.5" /> Show QR Code
+                    <QrCode className="w-3.5 h-3.5 mr-1.5 text-stone-600" /> Show QR Code
                   </button>
 
                   <button
                     onClick={() => onOpenPassport(demoBatchId)}
-                    className="px-3.5 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center"
+                    className="px-5 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white rounded-full text-xs font-semibold shadow-xs transition flex items-center cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open Honey Passport
                   </button>

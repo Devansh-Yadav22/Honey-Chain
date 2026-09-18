@@ -65,7 +65,7 @@ export const AccessDenied: React.FC<AccessDeniedProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
         <button
           onClick={onNavigateHome}
-          className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-amber-700 hover:bg-amber-800 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition shadow-xs"
+          className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold px-5 py-2.5 rounded-full text-xs transition shadow-xs cursor-pointer"
         >
           <Home className="w-4 h-4" />
           <span>Go to Authorized Workspace</span>
@@ -74,7 +74,7 @@ export const AccessDenied: React.FC<AccessDeniedProps> = ({
         {onOpenPassport && (
           <button
             onClick={() => onOpenPassport('HC-2026-0001')}
-            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold px-4 py-2.5 rounded-xl text-xs transition border border-stone-300"
+            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white hover:bg-stone-50 text-stone-800 font-semibold px-4 py-2.5 rounded-full text-xs transition border border-stone-300 cursor-pointer"
           >
             <QrCode className="w-4 h-4 text-stone-600" />
             <span>Public Honey Passport</span>

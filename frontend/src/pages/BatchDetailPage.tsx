@@ -33,21 +33,21 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
     <div className="space-y-6">
       <button
         onClick={onBack}
-        className="inline-flex items-center text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline transition"
+        className="inline-flex items-center text-xs font-semibold text-[#3D5A3A] hover:text-[#2E4A2E] hover:underline transition"
       >
-        <ArrowLeft className="w-4 h-4 mr-1" /> {t('common.back')}
+        <ArrowLeft className="w-4 h-4 mr-1.5" /> {t('common.back')}
       </button>
 
       {/* Top Banner */}
-      <div className="panel-card p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+      <div className="panel-card p-6 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm border border-stone-200/80">
         <div>
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl font-bold font-mono text-amber-900">{batch.id}</span>
+          <div className="flex items-center space-x-3 flex-wrap gap-y-2">
+            <span className="text-2xl font-bold font-mono text-stone-900" style={{ fontFamily: "'Outfit', sans-serif" }}>{batch.id}</span>
             <StatusBadge status={batch.status} />
-            <span className={`inline-flex items-center text-xs font-mono font-bold px-2.5 py-1 rounded-lg border ${
-              isDirect ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-purple-50 text-purple-800 border-purple-200'
+            <span className={`inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full border ${
+              isDirect ? 'bg-forest-50 text-[#3D5A3A] border-forest-200' : 'bg-stone-100 text-stone-700 border-stone-200'
             }`}>
-              {isDirect ? <User className="w-3.5 h-3.5 mr-1 text-blue-700" /> : <Building2 className="w-3.5 h-3.5 mr-1 text-purple-700" />}
+              {isDirect ? <User className="w-3.5 h-3.5 mr-1.5 text-[#3D5A3A]" /> : <Building2 className="w-3.5 h-3.5 mr-1.5 text-stone-600" />}
               {isDirect ? t('provenance.directBeekeeper') : t('provenance.companyManaged')}
             </span>
           </div>
@@ -57,7 +57,7 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowQr(true)}
-            className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-xs flex items-center space-x-2 transition shadow-sm"
+            className="px-5 py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full text-xs flex items-center space-x-2 transition shadow-sm"
           >
             <QrCode className="w-4 h-4" />
             <span>Generate QR Passport</span>
@@ -68,9 +68,9 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Timeline */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="panel-card p-6 rounded-2xl space-y-4 shadow-sm">
-            <h3 className="font-bold text-stone-900 text-base flex items-center">
-              <Package className="w-5 h-5 text-amber-700 mr-2" />
+          <div className="panel-card p-6 rounded-2xl space-y-4 shadow-sm border border-stone-200/80">
+            <h3 className="font-bold text-stone-900 text-base flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <Package className="w-5 h-5 text-[#3D5A3A] mr-2" />
               Chain-of-Custody Provenance Journey
             </h3>
             <Timeline batch={batch} />
@@ -79,12 +79,12 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
 
         {/* Verification Sidebar */}
         <div className="space-y-6">
-          <div className="panel-card p-5 rounded-2xl space-y-4 shadow-sm">
-            <h4 className="font-bold text-sm text-stone-900 flex items-center">
-              <Database className="w-4 h-4 text-emerald-700 mr-2" />
+          <div className="panel-card p-5 rounded-2xl space-y-4 shadow-sm border border-stone-200/80">
+            <h4 className="font-bold text-sm text-stone-900 flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <Database className="w-4 h-4 text-[#3D5A3A] mr-2" />
               Blockchain Verification
             </h4>
-            <div className="p-3.5 bg-stone-50 rounded-xl space-y-2 text-xs border border-stone-200">
+            <div className="p-3.5 bg-[#F5F0E8]/50 rounded-xl space-y-2 text-xs border border-stone-200">
               <div className="flex items-center justify-between text-stone-600">
                 <span>Ledger Network</span>
                 <span className="text-stone-900 font-semibold">Hyperledger Fabric</span>
@@ -99,15 +99,15 @@ export const BatchDetailPage: React.FC<BatchDetailPageProps> = ({ batchId, onBac
             </div>
           </div>
 
-          <div className={`p-5 rounded-2xl space-y-3 border shadow-sm ${isSuspicious ? 'border-rose-200 bg-rose-50/80' : 'border-emerald-200 bg-emerald-50/80'}`}>
-            <h4 className="font-bold text-sm text-stone-900 flex items-center">
-              <Cpu className={`w-4 h-4 mr-2 ${isSuspicious ? 'text-rose-700' : 'text-emerald-700'}`} />
+          <div className={`p-5 rounded-2xl space-y-3 border shadow-sm ${isSuspicious ? 'border-rose-200 bg-rose-50/80' : 'border-forest-200 bg-forest-50/70'}`}>
+            <h4 className="font-bold text-sm text-stone-900 flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              <Cpu className={`w-4 h-4 mr-2 ${isSuspicious ? 'text-rose-700' : 'text-[#3D5A3A]'}`} />
               AI Provenance Consistency Engine
             </h4>
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-stone-700 font-medium">Consistency Score</span>
-                <span className={`font-bold text-base ${isSuspicious ? 'text-rose-800' : 'text-emerald-800'}`}>
+                <span className={`font-bold text-base ${isSuspicious ? 'text-rose-800' : 'text-[#3D5A3A]'}`}>
                   {isSuspicious ? '24%' : '97%'}
                 </span>
               </div>

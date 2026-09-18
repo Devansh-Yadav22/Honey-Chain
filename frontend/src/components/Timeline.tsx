@@ -87,14 +87,14 @@ export const Timeline: React.FC<TimelineProps> = ({ batch }) => {
 
   return (
     <div className="space-y-6">
-      <div className="relative pl-7 border-l-2 border-amber-200 space-y-5">
+      <div className="relative pl-7 border-l-2 border-[#3D5A3A]/25 space-y-5">
         {steps.map((step) => {
           const Icon = step.icon;
           return (
             <div key={step.id} className="relative group">
-              <div className={`absolute -left-[39px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center shadow-sm ring-4 ring-[#FAF8F5] transition-all ${
+              <div className={`absolute -left-[39px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center shadow-xs ring-4 ring-[#FAFAF5] transition-all ${
                 step.isCompleted
-                  ? 'bg-amber-600 text-white border-2 border-amber-500'
+                  ? 'bg-[#3D5A3A] text-white border-2 border-[#2E4A2E]'
                   : 'bg-stone-100 text-stone-400 border-2 border-stone-300'
               }`}>
                 <Icon className="w-4 h-4" />
@@ -102,8 +102,8 @@ export const Timeline: React.FC<TimelineProps> = ({ batch }) => {
 
               <div className={`p-4 rounded-2xl border transition duration-200 ${
                 step.isCompleted
-                  ? 'bg-white border-stone-200 shadow-sm hover:border-amber-400/60'
-                  : 'bg-[#FAF8F5]/60 border-dashed border-stone-200 opacity-75'
+                  ? 'bg-white border-stone-200 shadow-xs hover:border-[#3D5A3A]'
+                  : 'bg-[#FAFAF5]/60 border-dashed border-stone-200 opacity-75'
               }`}>
                 <div className="flex items-center justify-between">
                   <h4 className={`font-bold text-sm ${step.isCompleted ? 'text-stone-900' : 'text-stone-500'}`}>

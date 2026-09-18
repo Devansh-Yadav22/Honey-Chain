@@ -145,26 +145,26 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAE3D9]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80">
         <div>
           <div className="flex items-center space-x-2">
             <span className="text-xl">🛡️</span>
-            <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Platform Operations Command Center</h1>
+            <h1 className="text-2xl font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Platform Operations Command Center</h1>
           </div>
           <p className="text-xs text-stone-600 mt-1">
-            Honey Chain National Operations • Multi-tenant onboarding queue, live consistency engine alerts, batch discrepancy monitoring, and tamper-evident audit logs.
+            HoneyChain National Operations • Multi-tenant onboarding queue, live consistency engine alerts, batch discrepancy monitoring, and tamper-evident audit logs.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <button
             onClick={loadData}
-            className="p-2 rounded-lg border border-[#EAE3D9] bg-white text-stone-600 hover:bg-stone-50 text-xs flex items-center font-medium shadow-xs"
+            className="px-3.5 py-1.5 rounded-full border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 text-xs flex items-center font-medium shadow-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1 text-stone-500" /> Refresh Telemetry
           </button>
-          <span className="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-mono font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+          <span className="inline-flex items-center px-3 py-1 bg-forest-50 text-forest-900 border border-forest-200 rounded-full text-xs font-mono font-bold">
+            <span className="w-2 h-2 rounded-full bg-[#3D5A3A] mr-2 animate-pulse" />
             OPERATIONAL
           </span>
         </div>
@@ -243,14 +243,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
                   <button
                     onClick={() => handleRejectOrg(org.id)}
                     disabled={isProcessing}
-                    className="px-3 py-1.5 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 font-medium inline-flex items-center text-[11px]"
+                    className="px-3.5 py-1.5 rounded-full border border-rose-200 text-rose-700 hover:bg-rose-50 font-medium inline-flex items-center text-[11px] cursor-pointer"
                   >
                     <XCircle className="w-3.5 h-3.5 mr-1" /> Reject Application
                   </button>
                   <button
                     onClick={() => handleApproveOrg(org.id)}
                     disabled={isProcessing}
-                    className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold inline-flex items-center text-[11px] shadow-xs"
+                    className="px-4 py-1.5 rounded-full bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold inline-flex items-center text-[11px] shadow-xs cursor-pointer"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Approve & Issue Key
                   </button>
@@ -363,9 +363,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
               <button
                 key={filter}
                 onClick={() => setAlertFilter(filter)}
-                className={`px-2.5 py-1 rounded text-xs font-mono font-medium transition-colors ${
+                className={`px-3 py-1 rounded-full text-xs font-mono font-medium transition cursor-pointer ${
                   alertFilter === filter
-                    ? 'bg-amber-700 text-white'
+                    ? 'bg-[#3D5A3A] text-white font-bold shadow-xs'
                     : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                 }`}
               >
@@ -452,7 +452,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onNaviga
                             <button
                               onClick={() => handleResolveAlert(item.id)}
                               disabled={isProcessing}
-                              className="px-3 py-1 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-[11px]"
+                              className="px-4 py-1.5 rounded-full bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold text-[11px] shadow-xs cursor-pointer"
                             >
                               Confirm & Log Audit
                             </button>

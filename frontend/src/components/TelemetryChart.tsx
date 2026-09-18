@@ -16,9 +16,9 @@ export const TelemetryChart: React.FC<TelemetryChartProps> = ({ data }) => {
   }));
 
   return (
-    <div className="w-full h-72 bg-white p-5 rounded-2xl border border-[#EAE3D9] shadow-sm">
+    <div className="w-full h-72 bg-white p-5 rounded-2xl border border-stone-200/80 shadow-xs">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2 text-xs">
-        <span className="font-bold text-stone-800 text-sm">Live IoT Hive Telemetry Trends</span>
+        <span className="font-bold text-stone-800 text-sm tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Live IoT Hive Telemetry Trends</span>
         <div className="flex items-center space-x-4 text-xs font-medium text-stone-600">
           <span className="flex items-center"><span className="w-2.5 h-2.5 rounded-full bg-amber-600 mr-1.5" /> Temp (°C)</span>
           <span className="flex items-center"><span className="w-2.5 h-2.5 rounded-full bg-sky-600 mr-1.5" /> Humidity (%)</span>

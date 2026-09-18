@@ -58,10 +58,10 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-[#EAE3D9]">
+      <div className="pb-4 border-b border-stone-200/80">
         <div className="flex items-center space-x-2">
           <span className="text-xl">📦</span>
-          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Packaging & Passport Plant</h1>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Packaging & Passport Plant</h1>
         </div>
         <p className="text-xs text-stone-600 mt-1">
           PureFlora Packaging Hub • Food-grade jar bottling, tamper-evident sealing, and public Honey Passport QR generation.
@@ -71,7 +71,7 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Batches Queue */}
-        <div className="bg-white border border-[#EAE3D9] rounded-xl p-4 space-y-3">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3 shadow-xs">
           <h2 className="text-xs font-bold text-stone-700 uppercase tracking-wider font-mono">
             Packaging Batches ({batches.length})
           </h2>
@@ -85,10 +85,10 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     setSelectedBatch(batch);
                     setUnitsCount(String(Math.floor((batch.quantity * 1000) / 500)));
                   }}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-amber-50/80 border-amber-300 shadow-xs'
-                      : 'bg-[#FFFDF9] border-[#EAE3D9] hover:bg-stone-50'
+                      ? 'bg-forest-50/80 border-[#3D5A3A] shadow-xs'
+                      : 'bg-[#FFFDF9] border-stone-200 hover:bg-stone-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -108,12 +108,12 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
         {/* Packaging Form & Passport Publishing */}
         <div className="lg:col-span-2 space-y-5">
           {selectedBatch ? (
-            <div className="bg-white border border-[#EAE3D9] rounded-xl p-6 space-y-6">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-6 space-y-6 shadow-xs">
               {/* Batch Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EAE3D9]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200/80">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono font-bold text-lg text-amber-800">{selectedBatch.id}</span>
+                    <span className="font-mono font-bold text-lg text-forest-900">{selectedBatch.id}</span>
                     <StatusBadge status={selectedBatch.status} type="batch" />
                   </div>
                   <p className="text-xs text-stone-500 mt-0.5">Total Volume: {selectedBatch.quantity} kg • {selectedBatch.origin}</p>
@@ -122,7 +122,7 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setQrBatchId(selectedBatch.id)}
-                    className="inline-flex items-center px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold rounded-lg border border-[#EAE3D9]"
+                    className="inline-flex items-center px-4 py-2 bg-white hover:bg-stone-50 text-stone-800 text-xs font-semibold rounded-full border border-stone-200 cursor-pointer shadow-2xs"
                   >
                     <QrCode className="w-4 h-4 mr-1.5 text-stone-700" /> Preview QR
                   </button>
@@ -130,7 +130,7 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                   {selectedBatch.status !== 'PUBLISHED' && (
                     <button
                       onClick={() => handlePublishPassport(selectedBatch.id)}
-                      className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg shadow-sm"
+                      className="inline-flex items-center px-4 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4 mr-1.5" /> Publish Digital Passport
                     </button>
@@ -196,7 +196,7 @@ export const PackagingPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     <button
                       type="submit"
                       disabled={isPackaging}
-                      className="w-full py-2.5 bg-stone-800 hover:bg-stone-900 text-white font-semibold rounded-lg shadow-sm text-xs flex items-center justify-center transition-colors"
+                      className="w-full py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full shadow-xs text-xs flex items-center justify-center transition cursor-pointer"
                     >
                       <Tag className="w-3.5 h-3.5 mr-1.5" />
                       {isPackaging ? 'Committing Packaging to Fabric...' : 'Sign Packaging Event & Assign Consumer Batch'}

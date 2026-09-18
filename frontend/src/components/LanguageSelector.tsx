@@ -1,56 +1,84 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '../context/I18nContext';
-import { Languages } from 'lucide-react';
+import { Language, LANGUAGE_LABELS } from '../i18n/translations';
+import { ChevronDown, Globe } from 'lucide-react';
+
+const LANGUAGES: Language[] = ['en', 'hi', 'ta', 'te', 'kn', 'ml', 'bn', 'mr', 'gu', 'pa'];
 
 export const LanguageSelector: React.FC<{ variant?: 'navbar' | 'compact' | 'pill' }> = ({ variant = 'navbar' }) => {
   const { language, setLanguage } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const currentLabel = LANGUAGE_LABELS[language];
 
   if (variant === 'pill') {
     return (
-      <div className="inline-flex items-center bg-[#FAF8F5] border border-[#D6C7B2] p-0.5 rounded-full text-xs">
+      <div ref={dropdownRef} className="relative">
         <button
-          onClick={() => setLanguage('en')}
-          className={`px-2.5 py-1 rounded-full font-medium transition ${
-            language === 'en' ? 'bg-amber-700 text-white shadow-2xs' : 'text-stone-600 hover:text-stone-900'
-          }`}
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-1.5 bg-[#FAF8F5] border border-[#D6C7B2] px-3 py-1.5 rounded-full text-xs font-medium text-stone-700 hover:bg-amber-50 transition"
         >
-          EN
+          <Globe className="w-3.5 h-3.5 text-stone-500" />
+          <span>{currentLabel.native}</span>
+          <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
-        <button
-          onClick={() => setLanguage('hi')}
-          className={`px-2.5 py-1 rounded-full font-medium transition ${
-            language === 'hi' ? 'bg-amber-700 text-white shadow-2xs' : 'text-stone-600 hover:text-stone-900'
-          }`}
-        >
-          हिन्दी
-        </button>
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-[#D6C7B2] rounded-xl shadow-lg py-1 z-50 max-h-64 overflow-y-auto">
+            {LANGUAGES.map((lang) => (
+              <button
+                key={lang}
+                onClick={() => { setLanguage(lang); setIsOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-amber-50 transition ${
+                  language === lang ? 'bg-amber-50 text-amber-900 font-bold' : 'text-stone-700'
+                }`}
+              >
+                <span>{LANGUAGE_LABELS[lang].native}</span>
+                <span className="text-[10px] text-stone-400 font-normal">{LANGUAGE_LABELS[lang].english}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="h-9 flex items-center space-x-1 bg-[#FAF8F5] p-1 rounded-full border border-[#D6C7B2] text-xs">
-      <Languages className="w-3.5 h-3.5 text-stone-500 ml-1.5" />
+    <div ref={dropdownRef} className="relative">
       <button
-        onClick={() => setLanguage('en')}
-        className={`px-2.5 py-1 rounded-full font-semibold transition ${
-          language === 'en'
-            ? 'bg-amber-700 text-white shadow-2xs'
-            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
-        }`}
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-9 flex items-center gap-1.5 bg-[#FAF8F5] px-3 rounded-full border border-[#D6C7B2] text-xs font-semibold text-stone-700 hover:bg-amber-50 hover:border-amber-400 transition"
       >
-        EN
+        <Globe className="w-3.5 h-3.5 text-stone-500" />
+        <span>{currentLabel.native}</span>
+        <ChevronDown className={`w-3 h-3 text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-      <button
-        onClick={() => setLanguage('hi')}
-        className={`px-2.5 py-1 rounded-full font-semibold transition ${
-          language === 'hi'
-            ? 'bg-amber-700 text-white shadow-2xs'
-            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
-        }`}
-      >
-        हिन्दी
-      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-1.5 w-48 bg-white border border-[#D6C7B2] rounded-xl shadow-lg py-1 z-50 max-h-72 overflow-y-auto">
+          {LANGUAGES.map((lang) => (
+            <button
+              key={lang}
+              onClick={() => { setLanguage(lang); setIsOpen(false); }}
+              className={`w-full text-left px-3.5 py-2 text-xs flex items-center justify-between hover:bg-amber-50 transition ${
+                language === lang ? 'bg-amber-50 text-amber-900 font-bold' : 'text-stone-700'
+              }`}
+            >
+              <span>{LANGUAGE_LABELS[lang].native}</span>
+              <span className="text-[10px] text-stone-400 font-normal">{LANGUAGE_LABELS[lang].english}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

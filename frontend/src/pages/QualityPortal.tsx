@@ -102,10 +102,10 @@ export const QualityPortal: React.FC<{ onNavigateToBatch?: (id: string) => void 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-[#EAE3D9]">
+      <div className="pb-4 border-b border-stone-200/80">
         <div className="flex items-center space-x-2">
           <span className="text-xl">🔬</span>
-          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Quality & Laboratory Evidence Portal</h1>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Quality & Laboratory Evidence Portal</h1>
         </div>
         <p className="text-xs text-stone-600 mt-1">
           Apex Food Safety & Purity Testing Labs (NABL Accredited ISO/IEC 17025) • Chemical profiling, isotopic analysis, off-chain report hashing, and Fabric certificate anchoring.
@@ -115,7 +115,7 @@ export const QualityPortal: React.FC<{ onNavigateToBatch?: (id: string) => void 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Batches Queue */}
-        <div className="bg-white border border-[#EAE3D9] rounded-xl p-4 space-y-3">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3 shadow-xs">
           <h2 className="text-xs font-bold text-stone-700 uppercase tracking-wider font-mono">
             Honey Batches for Chemical Assay ({batches.length})
           </h2>
@@ -126,10 +126,10 @@ export const QualityPortal: React.FC<{ onNavigateToBatch?: (id: string) => void 
                 <div
                   key={batch.id}
                   onClick={() => setSelectedBatchId(batch.id)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-amber-50/80 border-amber-300 shadow-xs'
-                      : 'bg-[#FFFDF9] border-[#EAE3D9] hover:bg-stone-50'
+                      ? 'bg-forest-50/80 border-[#3D5A3A] shadow-xs'
+                      : 'bg-[#FFFDF9] border-stone-200 hover:bg-stone-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -149,12 +149,12 @@ export const QualityPortal: React.FC<{ onNavigateToBatch?: (id: string) => void 
         {/* Quality Assay Workspace */}
         <div className="lg:col-span-2 space-y-5">
           {selectedBatch ? (
-            <div className="bg-white border border-[#EAE3D9] rounded-xl p-6 space-y-6">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-6 space-y-6 shadow-xs">
               {/* Batch Info */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EAE3D9]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200/80">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono font-bold text-lg text-amber-800">{selectedBatch.id}</span>
+                    <span className="font-mono font-bold text-lg text-forest-900">{selectedBatch.id}</span>
                     <StatusBadge status={selectedBatch.status} type="batch" />
                   </div>
                   <p className="text-xs text-stone-500 mt-0.5">{selectedBatch.origin} • Floral: {selectedBatch.floralSource || 'Raw Honey'}</p>
@@ -314,7 +314,7 @@ export const QualityPortal: React.FC<{ onNavigateToBatch?: (id: string) => void 
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-lg shadow-sm text-xs flex items-center justify-center transition-colors"
+                      className="w-full py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full shadow-xs text-xs flex items-center justify-center transition cursor-pointer"
                     >
                       <FileCheck className="w-3.5 h-3.5 mr-1.5" />
                       {isSubmitting ? 'Computing SHA-256 Digest & Anchoring on Fabric...' : 'Sign Digital Lab Certificate & Anchor on Fabric Ledger'}

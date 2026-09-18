@@ -290,15 +290,18 @@ function MainApp() {
   };
 
   const isFullPage = currentTab === 'landing' || (!isAuthenticated && currentTab === 'login');
+  const hideOuterNav = currentTab === 'landing';
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-sans">
-      <Navbar 
-        onSearchPassport={handleSearchPassport} 
-        onNavigateLogin={() => setCurrentTab('login')} 
-        onNavigateHome={() => setCurrentTab(isAuthenticated ? getHomeTabForRole(currentRole) : 'landing')}
-        onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
-      />
+      {!hideOuterNav && (
+        <Navbar 
+          onSearchPassport={handleSearchPassport} 
+          onNavigateLogin={() => setCurrentTab('login')} 
+          onNavigateHome={() => setCurrentTab(isAuthenticated ? getHomeTabForRole(currentRole) : 'landing')}
+          onOpenVerifyModal={() => setIsVerifyModalOpen(true)}
+        />
+      )}
       <div className="flex flex-1">
         {!isFullPage && (
           <Sidebar currentTab={currentTab} onTabSelect={setCurrentTab} />

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { Language, Translations, translations } from '../i18n/translations';
 
 interface I18nContextType {
@@ -10,6 +10,8 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'honeychain_lang';
+
+const VALID_LANGUAGES: Language[] = ['en', 'hi', 'ta', 'te', 'kn', 'ml', 'bn', 'mr', 'gu', 'pa'];
 
 // Alias map for dot-notation keys used across components
 const KEY_ALIASES: Record<string, keyof Translations> = {
@@ -40,11 +42,15 @@ const KEY_ALIASES: Record<string, keyof Translations> = {
   'passport.disclaimer': 'passportDisclaimer'
 };
 
+function isValidLanguage(val: string): val is Language {
+  return VALID_LANGUAGES.includes(val as Language);
+}
+
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === 'en' || stored === 'hi') return stored;
+      if (stored && isValidLanguage(stored)) return stored;
     }
     return 'en';
   });
@@ -85,4 +91,3 @@ export const useTranslation = () => {
   }
   return context;
 };
-

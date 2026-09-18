@@ -164,10 +164,10 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-[#EAE3D9]">
+      <div className="pb-4 border-b border-stone-200/80">
         <div className="flex items-center space-x-2">
           <span className="text-xl">⚙️</span>
-          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Processing Facility Workspace</h1>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Processing Facility Workspace</h1>
         </div>
         <p className="text-xs text-stone-600 mt-1">
           NectarPure Processing Facilities • Raw honey intake, thermal moisture reduction (&le;45°C), filtration, off-chain evidence hashing, and custody handoffs.
@@ -215,7 +215,7 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
       {/* Main Grid: Batches Queue + Active Batch Operations */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Batches Queue */}
-        <div className="bg-white border border-[#EAE3D9] rounded-xl p-4 space-y-3">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3 shadow-xs">
           <h2 className="text-xs font-bold text-stone-700 uppercase tracking-wider font-mono">
             Facility Batches Queue ({batches.length})
           </h2>
@@ -229,10 +229,10 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     setSelectedBatch(batch);
                     setOutputWeight(String(batch.quantity));
                   }}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-amber-50/80 border-amber-300 shadow-xs'
-                      : 'bg-[#FFFDF9] border-[#EAE3D9] hover:bg-stone-50'
+                      ? 'bg-forest-50/80 border-[#3D5A3A] shadow-xs'
+                      : 'bg-[#FFFDF9] border-stone-200 hover:bg-stone-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -252,12 +252,12 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
         {/* Processing Actions Container */}
         <div className="lg:col-span-2 space-y-5">
           {selectedBatch ? (
-            <div className="bg-white border border-[#EAE3D9] rounded-xl p-6 space-y-6">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-6 space-y-6 shadow-xs">
               {/* Batch Overview Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EAE3D9]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200/80">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono font-bold text-lg text-amber-800">{selectedBatch.id}</span>
+                    <span className="font-mono font-bold text-lg text-forest-900">{selectedBatch.id}</span>
                     <StatusBadge status={selectedBatch.status} type="batch" />
                   </div>
                   <p className="text-xs text-stone-500 mt-0.5">{selectedBatch.origin}</p>
@@ -266,7 +266,7 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 {selectedBatch.status === 'HARVESTED' && (
                   <button
                     onClick={() => handleIntake(selectedBatch.id)}
-                    className="inline-flex items-center px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg shadow-sm"
+                    className="inline-flex items-center px-4 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accept Intake & Log Receipt
                   </button>
@@ -275,7 +275,7 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 {(selectedBatch.status === 'PROCESSING' || selectedBatch.status === 'RECEIVED_FOR_PROCESSING') && (
                   <button
                     onClick={() => handleReadyForTransport(selectedBatch.id)}
-                    className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-lg shadow-sm"
+                    className="inline-flex items-center px-4 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs cursor-pointer"
                   >
                     <ArrowRight className="w-4 h-4 mr-1.5" /> Mark Ready & Dispatch to Transporter
                   </button>
@@ -380,7 +380,7 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className="w-full py-2.5 bg-stone-800 hover:bg-stone-900 text-white font-semibold rounded-lg shadow-sm transition-colors text-xs flex items-center justify-center"
+                      className="w-full py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full shadow-xs transition text-xs flex items-center justify-center cursor-pointer"
                     >
                       <Filter className="w-3.5 h-3.5 mr-1.5" />
                       {isProcessing ? 'Recording Event on Blockchain...' : 'Commit Processing Event to Provenance Ledger'}
@@ -390,9 +390,9 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
               </div>
 
               {/* Off-Chain Evidence Upload (SHA-256) */}
-              <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-3">
+              <div className="p-4 bg-stone-50 border border-stone-200 rounded-2xl space-y-3">
                 <h4 className="text-xs font-bold text-stone-800 flex items-center">
-                  <UploadCloud className="w-4 h-4 mr-1.5 text-amber-700" /> Upload Processing Evidence & Generate SHA-256
+                  <UploadCloud className="w-4 h-4 mr-1.5 text-[#3D5A3A]" /> Upload Processing Evidence & Generate SHA-256
                 </h4>
                 <form onSubmit={handleUploadEvidence} className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div>
@@ -400,7 +400,7 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     <select
                       value={fileType}
                       onChange={e => setFileType(e.target.value)}
-                      className="w-full p-2 rounded-lg border border-[#EAE3D9] bg-white text-stone-800"
+                      className="w-full p-2 rounded-xl border border-stone-200 bg-white text-stone-800"
                     >
                       <option value="TEMPERATURE_LOG">Thermal Datalogger Log</option>
                       <option value="LAB_REPORT">Internal Moisture Assay</option>
@@ -415,12 +415,12 @@ export const ProcessorPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                         type="file"
                         required
                         onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                        className="w-full text-xs text-stone-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200"
+                        className="w-full text-xs text-stone-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-forest-100 file:text-forest-900 hover:file:bg-forest-200"
                       />
                       <button
                         type="submit"
                         disabled={isUploading || !uploadFile}
-                        className="px-3 py-1.5 bg-amber-700 text-white font-semibold rounded-lg text-xs hover:bg-amber-800 shrink-0"
+                        className="px-4 py-1.5 bg-[#3D5A3A] text-white font-semibold rounded-full text-xs hover:bg-[#2E4A2E] shrink-0 cursor-pointer shadow-xs"
                       >
                         {isUploading ? 'Hashing...' : 'Upload & Hash'}
                       </button>

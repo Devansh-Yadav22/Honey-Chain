@@ -160,7 +160,7 @@ export const BeekeeperPortal: React.FC<{
         </div>
 
         <div className="flex items-center space-x-3">
-          <span className={`inline-flex items-center text-xs font-mono font-semibold px-2.5 py-1 rounded-sm border ${
+          <span className={`inline-flex items-center text-xs font-mono font-semibold px-3 py-1 rounded-full border ${
             activeProvenanceModel === 'DIRECT_BEEKEEPER' ? 'bg-blue-50 text-blue-900 border-blue-200' : 'bg-purple-50 text-purple-900 border-purple-200'
           }`}>
             {activeProvenanceModel === 'DIRECT_BEEKEEPER' ? <User className="w-3.5 h-3.5 mr-1" /> : <Building2 className="w-3.5 h-3.5 mr-1" />}
@@ -172,7 +172,7 @@ export const BeekeeperPortal: React.FC<{
               captureBrowserGps();
               setShowModal(true);
             }}
-            className="inline-flex items-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white text-xs font-semibold rounded-sm shadow-xs transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 mr-1.5" /> Record Harvest & Create Batch
           </button>
@@ -182,7 +182,7 @@ export const BeekeeperPortal: React.FC<{
       {/* Grid: Hive Selector + Active Hive Telemetry */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Apiary Hive List */}
-        <div className="bg-white border border-[#EAE3D9] rounded-sm p-4 space-y-3">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3">
           <h2 className="text-xs font-bold text-stone-700 uppercase tracking-wider font-mono">
             Managed Apiary Hives ({hives.length})
           </h2>
@@ -193,10 +193,10 @@ export const BeekeeperPortal: React.FC<{
                 <div
                   key={hive.id}
                   onClick={() => setSelectedHiveId(hive.id)}
-                  className={`p-3 rounded-sm border cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-amber-50/80 border-amber-400 shadow-xs'
-                      : 'bg-[#FFFDF9] border-[#EAE3D9] hover:bg-stone-50'
+                      ? 'bg-forest-50/80 border-[#3D5A3A] shadow-xs'
+                      : 'bg-[#FFFDF9] border-stone-200 hover:bg-stone-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -216,17 +216,17 @@ export const BeekeeperPortal: React.FC<{
         {/* Selected Hive Telemetry & AI Status */}
         <div className="lg:col-span-2 space-y-4">
           {selectedHive && (
-            <div className="bg-white border border-[#EAE3D9] rounded-sm p-5 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#EAE3D9]">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-5 space-y-4 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-stone-200/80">
                 <div>
-                  <h3 className="font-bold text-stone-900 text-base">{selectedHive.id} Telemetry Monitor</h3>
+                  <h3 className="font-bold text-stone-900 text-base" style={{ fontFamily: "'Outfit', sans-serif" }}>{selectedHive.id} Telemetry Monitor</h3>
                   <p className="text-xs text-stone-500 font-mono">{selectedHive.location.address}</p>
                 </div>
                 {health && (
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-stone-500 font-mono">Colony Health:</span>
-                    <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded-sm ${
-                      health.health === 'NORMAL' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    <span className={`text-xs font-semibold font-mono px-2.5 py-0.5 rounded-full ${
+                      health.health === 'NORMAL' ? 'bg-forest-100 text-[#3D5A3A]' : 'bg-rose-100 text-rose-800'
                     }`}>
                       {health.healthScore}/100 ({health.health})
                     </span>
@@ -236,8 +236,8 @@ export const BeekeeperPortal: React.FC<{
 
               {/* Anomaly Callout if flagged */}
               {anomalies?.anomaly && (
-                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-sm text-xs text-rose-900 space-y-1">
-                  <p className="font-bold flex items-center">
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-900 space-y-1">
+                  <p className="font-bold flex items-center" style={{ fontFamily: "'Outfit', sans-serif" }}>
                     <AlertTriangle className="w-4 h-4 mr-1.5 text-rose-700" /> AI Anomaly Detected ({anomalies.severity})
                   </p>
                   <ul className="list-disc list-inside text-stone-700 text-[11px] pl-1">
@@ -259,13 +259,13 @@ export const BeekeeperPortal: React.FC<{
       </div>
 
       {/* Harvest Batches Created by Beekeeper */}
-      <div className="bg-white border border-[#EAE3D9] rounded-sm p-5 space-y-4">
-        <h2 className="text-sm font-bold text-stone-900 tracking-tight">
+      <div className="bg-white border border-stone-200/90 rounded-2xl p-5 space-y-4 shadow-xs">
+        <h2 className="text-sm font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
           Apiary Harvest Batches & Provenance
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-xs text-left">
-            <thead className="bg-[#FAF8F5] text-stone-600 font-mono border-y border-[#EAE3D9]">
+            <thead className="bg-[#FAF8F5] text-stone-600 font-mono border-y border-stone-200/80">
               <tr>
                 <th className="py-2.5 px-3">Batch ID</th>
                 <th className="py-2.5 px-3">Model</th>
@@ -283,10 +283,10 @@ export const BeekeeperPortal: React.FC<{
                   <tr key={batch.id} className="hover:bg-stone-50/70">
                     <td className="py-2.5 px-3 font-mono font-bold text-amber-800">{batch.id}</td>
                     <td className="py-2.5 px-3">
-                      <span className={`inline-flex items-center text-[10px] font-mono font-bold px-2 py-0.5 rounded-sm border ${
-                        isDirect ? 'bg-blue-50 text-blue-800 border-blue-200' : 'bg-purple-50 text-purple-800 border-purple-200'
+                      <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+                        isDirect ? 'bg-forest-50 text-[#3D5A3A] border-forest-200' : 'bg-stone-100 text-stone-700 border-stone-200'
                       }`}>
-                        {isDirect ? <User className="w-3 h-3 mr-1" /> : <Building2 className="w-3 h-3 mr-1" />}
+                        {isDirect ? <User className="w-3 h-3 mr-1 text-[#3D5A3A]" /> : <Building2 className="w-3 h-3 mr-1 text-stone-600" />}
                         {isDirect ? 'Direct' : 'Company'}
                       </span>
                     </td>
@@ -300,16 +300,16 @@ export const BeekeeperPortal: React.FC<{
                       {onOpenPassport && (
                         <button
                           onClick={() => onOpenPassport(batch.id)}
-                          className="text-emerald-700 hover:text-emerald-800 font-semibold hover:underline inline-flex items-center text-[11px]"
+                          className="text-[#3D5A3A] hover:text-[#2E4A2E] font-semibold hover:underline inline-flex items-center text-xs"
                           title="View Consumer Honey Passport"
                         >
-                          <QrCode className="w-3 h-3 mr-0.5" /> Passport
+                          <QrCode className="w-3 h-3 mr-1" /> Passport
                         </button>
                       )}
                       {onNavigateToBatch && (
                         <button
                           onClick={() => onNavigateToBatch(batch.id)}
-                          className="text-amber-700 hover:text-amber-800 font-semibold hover:underline inline-flex items-center text-[11px]"
+                          className="text-[#3D5A3A] hover:text-[#2E4A2E] font-semibold hover:underline inline-flex items-center text-xs"
                         >
                           Inspect <ArrowRight className="w-3 h-3 ml-0.5" />
                         </button>
@@ -326,11 +326,11 @@ export const BeekeeperPortal: React.FC<{
       {/* Harvest Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-[#EAE3D9] rounded-md shadow-xl max-w-lg w-full p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D9]">
+          <div className="bg-white border border-stone-200/90 rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200/80">
               <div>
-                <h3 className="text-base font-bold text-stone-900">Record Honey Harvest Batch</h3>
-                <p className="text-[11px] text-stone-500">
+                <h3 className="text-base font-bold text-stone-900" style={{ fontFamily: "'Outfit', sans-serif" }}>Record Honey Harvest Batch</h3>
+                <p className="text-xs text-stone-500">
                   Mode: <strong className="font-mono text-stone-800">{activeProvenanceModel}</strong>
                 </p>
               </div>
@@ -344,7 +344,7 @@ export const BeekeeperPortal: React.FC<{
                   <select
                     value={harvestHiveId}
                     onChange={e => setHarvestHiveId(e.target.value)}
-                    className="w-full p-2 rounded-sm border border-[#EAE3D9] bg-[#FFFDF9] text-stone-800"
+                    className="w-full p-2.5 rounded-xl border border-stone-200 bg-[#FFFDF9] text-stone-800 focus:outline-hidden focus:border-[#3D5A3A]"
                   >
                     {hives.map(h => (
                       <option key={h.id} value={h.id}>
@@ -362,7 +362,7 @@ export const BeekeeperPortal: React.FC<{
                     required
                     value={quantity}
                     onChange={e => setQuantity(e.target.value)}
-                    className="w-full p-2 rounded-sm border border-[#EAE3D9] bg-[#FFFDF9] text-stone-800 font-mono"
+                    className="w-full p-2.5 rounded-xl border border-stone-200 bg-[#FFFDF9] text-stone-800 font-mono focus:outline-hidden focus:border-[#3D5A3A]"
                   />
                 </div>
               </div>
@@ -374,27 +374,27 @@ export const BeekeeperPortal: React.FC<{
                   required
                   value={floralSource}
                   onChange={e => setFloralSource(e.target.value)}
-                  className="w-full p-2 rounded-sm border border-[#EAE3D9] bg-[#FFFDF9] text-stone-800"
+                  className="w-full p-2.5 rounded-xl border border-stone-200 bg-[#FFFDF9] text-stone-800 focus:outline-hidden focus:border-[#3D5A3A]"
                   placeholder="e.g. Mustard Blossom, Litchi, Acacia, Wildflower"
                 />
               </div>
 
               {/* Browser GPS Capture Block */}
-              <div className="p-3 bg-stone-50 border border-stone-200 rounded-sm space-y-2">
+              <div className="p-3.5 bg-[#F5F0E8]/60 border border-stone-200 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-stone-800 flex items-center">
-                    <Navigation className="w-3.5 h-3.5 mr-1 text-amber-700" /> GPS Geolocation Point
+                    <Navigation className="w-3.5 h-3.5 mr-1 text-[#3D5A3A]" /> GPS Geolocation Point
                   </span>
                   <button
                     type="button"
                     onClick={captureBrowserGps}
                     disabled={isCapturingGps}
-                    className="text-[11px] font-semibold text-amber-700 hover:text-amber-800 underline"
+                    className="text-xs font-semibold text-[#3D5A3A] hover:text-[#2E4A2E] underline"
                   >
                     {isCapturingGps ? 'Capturing...' : 'Re-capture GPS'}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+                <div className="grid grid-cols-2 gap-2 font-mono text-xs">
                   <div>
                     <span className="text-stone-500">Lat:</span> {gpsLat.toFixed(5)}
                   </div>
@@ -402,8 +402,8 @@ export const BeekeeperPortal: React.FC<{
                     <span className="text-stone-500">Lng:</span> {gpsLng.toFixed(5)}
                   </div>
                 </div>
-                <p className="text-[10px] text-stone-500 flex items-center">
-                  <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+                <p className="text-[11px] text-stone-500 flex items-center">
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-[#3D5A3A]" />
                   {gpsStatus}
                 </p>
               </div>
@@ -414,22 +414,22 @@ export const BeekeeperPortal: React.FC<{
                   rows={2}
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full p-2 rounded-sm border border-[#EAE3D9] bg-[#FFFDF9] text-stone-800"
+                  className="w-full p-2.5 rounded-xl border border-stone-200 bg-[#FFFDF9] text-stone-800 focus:outline-hidden focus:border-[#3D5A3A]"
                 />
               </div>
 
-              <div className="pt-3 flex justify-end space-x-2 border-t border-[#EAE3D9]">
+              <div className="pt-3 flex justify-end space-x-2 border-t border-stone-200/80">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-3 py-1.5 rounded-sm border border-[#EAE3D9] text-stone-600 hover:bg-stone-50"
+                  className="px-4 py-2 rounded-full border border-stone-200 text-stone-600 hover:bg-stone-50 cursor-pointer text-xs font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-1.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-sm shadow-xs"
+                  className="px-5 py-1.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full shadow-xs cursor-pointer"
                 >
                   {isSubmitting ? 'Recording on Fabric & Anchoring...' : 'Sign, Anchor on Fabric & Create'}
                 </button>

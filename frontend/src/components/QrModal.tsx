@@ -13,17 +13,19 @@ export const QrModal: React.FC<QrModalProps> = ({ batchId, onClose, onOpenPasspo
 
   return (
     <div className="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-[#EAE3D9] rounded-2xl p-6 max-w-sm w-full shadow-xl relative select-none">
+      <div className="bg-white border border-stone-200 rounded-2xl p-6 max-w-sm w-full shadow-xl relative select-none animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 p-1.5 rounded-lg hover:bg-stone-100 transition"
+          className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 p-1.5 rounded-full hover:bg-stone-100 transition cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="text-center space-y-4">
           <div>
-            <h3 className="font-bold text-base text-stone-900">Batch QR Passport</h3>
+            <h3 className="font-bold text-base text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Batch QR Passport
+            </h3>
             <p className="text-xs text-stone-500 mt-0.5">Scan to inspect consumer provenance certificate</p>
           </div>
 
@@ -31,7 +33,7 @@ export const QrModal: React.FC<QrModalProps> = ({ batchId, onClose, onOpenPasspo
             <QRCodeSVG value={passportUrl} size={160} level="H" includeMargin={false} />
           </div>
 
-          <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-200 font-mono text-xs font-bold text-amber-900">
+          <div className="bg-forest-50 p-2.5 rounded-xl border border-forest-200 font-mono text-xs font-bold text-forest-900">
             {batchId}
           </div>
 
@@ -41,14 +43,14 @@ export const QrModal: React.FC<QrModalProps> = ({ batchId, onClose, onOpenPasspo
                 onClose();
                 onOpenPassport(batchId);
               }}
-              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition shadow-sm"
+              className="w-full bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold py-2.5 rounded-full text-xs flex items-center justify-center space-x-2 transition shadow-xs cursor-pointer"
             >
               <span>Inspect Passport Certificate</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={onClose}
-              className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 rounded-xl text-xs font-medium transition"
+              className="w-full bg-stone-100 hover:bg-stone-200 text-stone-700 py-2 rounded-full text-xs font-medium transition cursor-pointer"
             >
               Close
             </button>

@@ -135,10 +135,10 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-[#EAE3D9]">
+      <div className="pb-4 border-b border-stone-200/80">
         <div className="flex items-center space-x-2">
           <span className="text-xl">🚚</span>
-          <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Logistics & Cold-Chain Workspace</h1>
+          <h1 className="text-2xl font-bold text-stone-900 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>Logistics & Cold-Chain Workspace</h1>
         </div>
         <p className="text-xs text-stone-600 mt-1">
           ColdRoute Agro Logistics • Temperature-controlled honey transit, waypoint logging, waybill SHA-256 evidence, and custody handoffs.
@@ -186,7 +186,7 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Shipments List */}
-        <div className="bg-white border border-[#EAE3D9] rounded-xl p-4 space-y-3">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3 shadow-xs">
           <h2 className="text-xs font-bold text-stone-700 uppercase tracking-wider font-mono">
             Shipment Batches ({batches.length})
           </h2>
@@ -197,10 +197,10 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 <div
                   key={batch.id}
                   onClick={() => setSelectedBatch(batch)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
                     isSelected
-                      ? 'bg-amber-50/80 border-amber-300 shadow-xs'
-                      : 'bg-[#FFFDF9] border-[#EAE3D9] hover:bg-stone-50'
+                      ? 'bg-forest-50/80 border-[#3D5A3A] shadow-xs'
+                      : 'bg-[#FFFDF9] border-stone-200 hover:bg-stone-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -220,12 +220,12 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
         {/* Active Transport Management Panel */}
         <div className="lg:col-span-2 space-y-5">
           {selectedBatch ? (
-            <div className="bg-white border border-[#EAE3D9] rounded-xl p-6 space-y-6">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-6 space-y-6 shadow-xs">
               {/* Top Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EAE3D9]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200/80">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <span className="font-mono font-bold text-lg text-amber-800">{selectedBatch.id}</span>
+                    <span className="font-mono font-bold text-lg text-forest-900">{selectedBatch.id}</span>
                     <StatusBadge status={selectedBatch.status} type="batch" />
                   </div>
                   <p className="text-xs text-stone-500 mt-0.5">Origin: {selectedBatch.origin}</p>
@@ -234,7 +234,7 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                 {selectedBatch.status === 'IN_TRANSIT' && (
                   <button
                     onClick={() => handleConfirmDelivery(selectedBatch.id)}
-                    className="inline-flex items-center px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg shadow-sm"
+                    className="inline-flex items-center px-4 py-2 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white text-xs font-semibold rounded-full shadow-xs cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4 mr-1.5" /> Confirm Delivery & Handoff to Packager
                   </button>
@@ -299,7 +299,7 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-lg shadow-sm text-xs flex items-center justify-center transition-colors"
+                      className="w-full py-2.5 bg-[#3D5A3A] hover:bg-[#2E4A2E] text-white font-semibold rounded-full shadow-xs text-xs flex items-center justify-center transition cursor-pointer"
                     >
                       <Navigation className="w-3.5 h-3.5 mr-1.5" />
                       {isSubmitting ? 'Signing Dispatch on Ledger...' : 'Dispatch Shipment & Commit Custody Transfer'}
@@ -318,12 +318,12 @@ export const TransportPortal: React.FC<{ onNavigateToBatch?: (id: string) => voi
                     type="file"
                     required
                     onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                    className="w-full text-xs text-stone-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200"
+                    className="w-full text-xs text-stone-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-forest-100 file:text-forest-900 hover:file:bg-forest-200"
                   />
                   <button
                     type="submit"
                     disabled={isUploading || !uploadFile}
-                    className="px-3.5 py-1.5 bg-amber-700 text-white font-semibold rounded-lg text-xs hover:bg-amber-800 shrink-0"
+                    className="px-4 py-1.5 bg-[#3D5A3A] text-white font-semibold rounded-full text-xs hover:bg-[#2E4A2E] shrink-0 cursor-pointer shadow-xs"
                   >
                     {isUploading ? 'Hashing...' : 'Upload & Hash'}
                   </button>

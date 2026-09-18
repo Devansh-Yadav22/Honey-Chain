@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldCheck, ShieldAlert, CheckCircle2, ArrowLeft, FlaskConical, Layers, Clock, Award, User, Building2, FileCheck } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle2, ArrowLeft, FlaskConical, Layers, Clock, Award, User, Building2, FileCheck, Leaf } from 'lucide-react';
 import { HoneyPassport } from '../types';
 import { getHoneyPassport } from '../services/api';
 import { useTranslation } from '../context/I18nContext';
@@ -26,21 +26,21 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
   }, [batchId]);
 
   if (loading) {
-    return <div className="p-8 text-center text-stone-500 font-mono text-xs">{t('common.loading')}</div>;
+    return <div className="p-12 text-center text-stone-500 font-mono text-xs">{t('common.loading') || 'Loading verified passport...'}</div>;
   }
 
   if (!passport) {
     return (
       <div className="max-w-xl mx-auto my-12 p-8 bg-white border border-rose-200 rounded-2xl text-center space-y-4 shadow-xs">
         <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto" />
-        <h2 className="text-lg font-bold text-stone-900">Batch Record Not Found</h2>
+        <h2 className="text-lg font-bold text-stone-900" style={{ fontFamily: "'Outfit', sans-serif" }}>Batch Record Not Found</h2>
         <p className="text-xs text-stone-600">
-          No verified passport record was found for ID <span className="font-mono font-bold text-stone-900">{batchId}</span>. Please verify the batch ID or scan a valid Honey Chain QR code.
+          No verified passport record was found for ID <span className="font-mono font-bold text-stone-900">{batchId}</span>. Please verify the batch ID or scan a valid HoneyChain QR code.
         </p>
         {onBack && (
           <button
             onClick={onBack}
-            className="inline-flex items-center text-xs text-amber-700 hover:text-amber-800 font-semibold px-4 py-2 bg-amber-50 rounded-full border border-amber-200 hover:bg-amber-100 transition"
+            className="inline-flex items-center text-xs text-[#3D5A3A] hover:text-[#2E4A2E] font-semibold px-5 py-2 bg-forest-50 rounded-full border border-forest-200 hover:bg-forest-100 transition cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Back
           </button>
@@ -59,51 +59,51 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
   const hasPackaging = passport.timeline.packaging && passport.timeline.packaging.length > 0;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4 py-2 select-none">
+    <div className="max-w-3xl mx-auto space-y-4 py-4 select-none">
       {onBack && (
         <button
           onClick={onBack}
-          className="inline-flex items-center text-xs text-amber-700 hover:text-amber-800 hover:underline font-medium transition-colors px-2 py-1 rounded-full"
+          className="inline-flex items-center text-xs text-stone-700 hover:text-stone-900 font-medium transition-colors px-3 py-1.5 rounded-full border border-stone-300 bg-white hover:bg-stone-50 cursor-pointer shadow-2xs"
         >
-          <ArrowLeft className="w-3.5 h-3.5 mr-1" /> {t('common.back')}
+          <ArrowLeft className="w-3.5 h-3.5 mr-1.5 text-stone-500" /> {t('btnBack') || 'Back'}
         </button>
       )}
 
       {/* Official Digital Certificate Document Container */}
-      <div className="bg-white border border-[#EAE3D9] rounded-2xl shadow-xs p-6 md:p-8 space-y-6">
+      <div className="bg-white border border-stone-200/90 rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
         {/* Certificate Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#EAE3D9] pb-5">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-2xl shrink-0">
-              🍯
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/80 pb-5">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-12 h-12 rounded-full bg-[#3D5A3A] flex items-center justify-center text-white shadow-xs shrink-0">
+              <Leaf className="w-6 h-6 text-white" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="text-[10px] font-mono font-semibold text-amber-800 uppercase tracking-wider bg-amber-100/70 px-2.5 py-0.5 rounded-full border border-amber-200">
-                  {t('passport.title')}
+                <span className="text-[10px] font-mono font-semibold text-[#3D5A3A] uppercase tracking-wider bg-forest-50 px-2.5 py-0.5 rounded-full border border-forest-200">
+                  {t('passportTitle') || 'HoneyChain Passport'}
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border ${
                   isDirect 
                     ? 'bg-blue-50 text-blue-800 border-blue-200' 
                     : 'bg-purple-50 text-purple-800 border-purple-200'
                 }`}>
-                  {isDirect ? t('provenance.directBeekeeper') : t('provenance.companyManaged')}
+                  {isDirect ? (t('modelDirectBeekeeper') || 'Direct Apiary') : (t('modelCompanyManaged') || 'Multi-Tier Network')}
                 </span>
               </div>
-              <h1 className="text-xl font-bold text-stone-900 tracking-tight mt-1">
-                {t('common.batch')}: {passport.batchId}
+              <h1 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mt-1" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                {t('passportBatch') || 'Batch'}: {passport.batchId}
               </h1>
             </div>
           </div>
 
           <div>
-            <span className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-bold font-mono border ${
+            <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold font-mono border ${
               isVerified
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                ? 'bg-forest-50 text-forest-900 border-forest-300'
                 : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}>
-              {isVerified ? <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-600" /> : <ShieldAlert className="w-4 h-4 mr-1.5 text-rose-600" />}
-              {isVerified ? t('passport.verified') : 'DEVIATION DETECTED'}
+              {isVerified ? <ShieldCheck className="w-4 h-4 mr-1.5 text-[#3D5A3A]" /> : <ShieldAlert className="w-4 h-4 mr-1.5 text-rose-600" />}
+              {isVerified ? (t('passportStatusVerified') || 'On-Chain Verified') : 'DEVIATION DETECTED'}
             </span>
           </div>
         </div>
@@ -119,10 +119,12 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
           )}
           <div>
             <span className="font-bold">
-              {isDirect ? t('provenance.directBeekeeper') : t('provenance.companyManaged')}
+              {isDirect ? (t('modelDirectBeekeeper') || 'Direct Apiary Model') : (t('modelCompanyManaged') || 'Enterprise Supply Chain Model')}
             </span>
             <p className="text-[11px] text-stone-600 mt-0.5 leading-relaxed">
-              {isDirect ? t('provenance.directDesc') : t('provenance.companyDesc')}
+              {isDirect 
+                ? 'Direct farm-to-table traceability from registered beekeeper with immediate blockchain cryptographic stamp.' 
+                : 'Multi-tiered traceable journey: Apiary harvest \u2192 Moisture-controlled processing \u2192 Temperature-logged transit \u2192 Tamper-evident packaging.'}
             </p>
           </div>
         </div>
@@ -130,12 +132,12 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
         {/* 3-Pillar Verification Matrix */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Pillar 1: Verified Chain of Custody */}
-          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-[#EAE3D9] text-xs space-y-1">
+          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-stone-200/90 text-xs space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-mono font-bold text-[10px] text-stone-500 uppercase flex items-center">
-                <Layers className="w-3.5 h-3.5 mr-1 text-amber-700" /> 1. {t('passport.blockchain')}
+                <Layers className="w-3.5 h-3.5 mr-1 text-[#3D5A3A]" /> 1. Blockchain Ledger
               </span>
-              <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-mono font-bold text-forest-900 bg-forest-100/90 px-2 py-0.5 rounded-full">
                 CONFIRMED
               </span>
             </div>
@@ -144,13 +146,13 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
           </div>
 
           {/* Pillar 2: Yield & Volume Consistency */}
-          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-[#EAE3D9] text-xs space-y-1">
+          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-stone-200/90 text-xs space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-mono font-bold text-[10px] text-stone-500 uppercase flex items-center">
-                <FileCheck className="w-3.5 h-3.5 mr-1 text-amber-700" /> 2. {t('passport.aiEvidence')}
+                <FileCheck className="w-3.5 h-3.5 mr-1 text-[#3D5A3A]" /> 2. AI Evidence Audit
               </span>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                isConsistencyNormal ? 'text-emerald-800 bg-emerald-100/80' : 'text-rose-800 bg-rose-100/80'
+                isConsistencyNormal ? 'text-forest-900 bg-forest-100/90' : 'text-rose-800 bg-rose-100/80'
               }`}>
                 {isConsistencyNormal ? 'CONSISTENT' : 'WARNING'}
               </span>
@@ -162,13 +164,13 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
           </div>
 
           {/* Pillar 3: Chemical Lab Assay */}
-          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-[#EAE3D9] text-xs space-y-1">
+          <div className="p-4 rounded-xl border bg-[#FAF8F5] border-stone-200/90 text-xs space-y-1">
             <div className="flex items-center justify-between">
               <span className="font-mono font-bold text-[10px] text-stone-500 uppercase flex items-center">
-                <FlaskConical className="w-3.5 h-3.5 mr-1 text-amber-700" /> 3. {t('passport.labAssay')}
+                <FlaskConical className="w-3.5 h-3.5 mr-1 text-[#D97706]" /> 3. Lab Assay
               </span>
               <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                qualityPassed ? 'text-emerald-800 bg-emerald-100/80' : 'text-amber-800 bg-amber-100/80'
+                qualityPassed ? 'text-forest-900 bg-forest-100/90' : 'text-amber-800 bg-amber-100/80'
               }`}>
                 {qualityPassed ? 'FSSAI PASSED' : (passport.quality?.status || 'VERIFIED')}
               </span>
@@ -184,21 +186,21 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
 
         {/* Provenance Data Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-[#EAE3D9]">
-            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passport.originApiary')}</p>
+          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-stone-200/90">
+            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passportOriginApiary') || 'Origin Apiary'}</p>
             <p className="font-semibold text-stone-800 mt-1 truncate">{passport.origin}</p>
           </div>
-          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-[#EAE3D9]">
-            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passport.floralSource')}</p>
+          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-stone-200/90">
+            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passportFloralSource') || 'Floral Source'}</p>
             <p className="font-semibold text-stone-800 mt-1">{passport.floralSource || 'Multifloral Blossom'}</p>
           </div>
-          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-[#EAE3D9]">
-            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passport.batchVolume')}</p>
+          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-stone-200/90">
+            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passportVolume') || 'Batch Volume'}</p>
             <p className="font-semibold text-stone-800 mt-1">{passport.quantity} kg</p>
           </div>
-          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-[#EAE3D9]">
-            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passport.evidenceScore')}</p>
-            <p className={`font-bold font-mono mt-1 ${isVerified ? 'text-emerald-700' : 'text-rose-700'}`}>
+          <div className="bg-[#FFFDF9] p-3.5 rounded-xl border border-stone-200/90">
+            <p className="text-[10px] text-stone-500 font-mono uppercase">{t('passportEvidenceScore') || 'Trust Score'}</p>
+            <p className={`font-bold font-mono mt-1 ${isVerified ? 'text-[#3D5A3A]' : 'text-rose-700'}`}>
               {Math.round(passport.verification.consistencyScore * 100)}%
             </p>
           </div>
@@ -207,15 +209,15 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
         {/* Public Chain of Custody Timeline */}
         <div className="space-y-3 pt-1">
           <p className="text-[11px] font-mono text-stone-500 uppercase tracking-wider font-semibold">
-            {t('passport.timeline')}
+            {t('passportTimelineTitle') || 'Chain of Custody Timeline'}
           </p>
 
           {isDirect ? (
             /* DIRECT_BEEKEEPER Specific Timeline */
             <div className="space-y-2 text-xs">
-              <div className="p-3.5 rounded-xl bg-blue-50/40 border border-blue-200/80 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-forest-50/40 border border-forest-200/80 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3D5A3A] shrink-0" />
                   <div>
                     <span className="font-bold text-stone-900">1. Apiary Honey Harvest</span>
                     <p className="text-[11px] text-stone-600">
@@ -228,7 +230,7 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE3D9] flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-stone-200/80 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Award className="w-5 h-5 text-amber-600 shrink-0" />
                   <div>
@@ -238,14 +240,14 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
                     </p>
                   </div>
                 </div>
-                <span className="font-mono text-[10px] text-emerald-700 font-bold bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
+                <span className="font-mono text-[10px] text-forest-800 font-bold bg-forest-100/70 px-2.5 py-0.5 rounded-full">
                   Direct Sale
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-emerald-50/40 border border-emerald-200/80 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-forest-50/40 border border-forest-200/80 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <ShieldCheck className="w-5 h-5 text-[#3D5A3A] shrink-0" />
                   <div>
                     <span className="font-bold text-stone-900">3. Verified Authenticity Certificate</span>
                     <p className="text-[11px] text-stone-600">
@@ -253,7 +255,7 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
                     </p>
                   </div>
                 </div>
-                <span className="font-mono text-[10px] text-emerald-800 font-bold">
+                <span className="font-mono text-[10px] text-forest-800 font-bold">
                   Verified
                 </span>
               </div>
@@ -262,9 +264,9 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
             /* COMPANY_MANAGED Specific Supply Chain Timeline */
             <div className="space-y-2 text-xs">
               {/* Harvest */}
-              <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#EAE3D9] flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-[#FAF8F5] border border-stone-200/80 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#3D5A3A] shrink-0" />
                   <div>
                     <span className="font-bold text-stone-800">1. Apiary Honey Harvest</span>
                     <p className="text-[11px] text-stone-500">Origin: {passport.origin} • {passport.quantity} kg</p>
@@ -277,11 +279,11 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
 
               {/* Processing */}
               <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
-                hasProcessing ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+                hasProcessing ? 'bg-[#FAF8F5] border-stone-200/80' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
               }`}>
                 <div className="flex items-center space-x-3">
                   {hasProcessing ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#3D5A3A] shrink-0" />
                   ) : (
                     <Clock className="w-4 h-4 text-stone-400 shrink-0" />
                   )}
@@ -303,11 +305,11 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
 
               {/* Cold Chain Transport */}
               <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
-                hasTransport ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+                hasTransport ? 'bg-[#FAF8F5] border-stone-200/80' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
               }`}>
                 <div className="flex items-center space-x-3">
                   {hasTransport ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#3D5A3A] shrink-0" />
                   ) : (
                     <Clock className="w-4 h-4 text-stone-400 shrink-0" />
                   )}
@@ -329,11 +331,11 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
 
               {/* Packaging */}
               <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
-                hasPackaging ? 'bg-[#FAF8F5] border-[#EAE3D9]' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
+                hasPackaging ? 'bg-[#FAF8F5] border-stone-200/80' : 'bg-stone-50/50 border-dashed border-stone-200 opacity-60'
               }`}>
                 <div className="flex items-center space-x-3">
                   {hasPackaging ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-[#3D5A3A] shrink-0" />
                   ) : (
                     <Clock className="w-4 h-4 text-stone-400 shrink-0" />
                   )}
@@ -357,13 +359,13 @@ export const HoneyPassportPage: React.FC<HoneyPassportPageProps> = ({ batchId, o
         </div>
 
         {/* Document Footer */}
-        <div className="pt-4 border-t border-[#EAE3D9] space-y-2 text-[11px]">
+        <div className="pt-4 border-t border-stone-200/80 space-y-2 text-[11px]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between text-stone-500 font-mono text-[10px]">
             <span>Certificate Digest: {passport.verification.blockchainTxId || '0x8f3c7e9a2b4d1056'}</span>
-            <span>Honey Chain Purity & Origin Trust Network</span>
+            <span>HoneyChain Purity & Origin Trust Network</span>
           </div>
-          <p className="text-[10px] text-stone-500 italic">
-            {t('passport.disclaimer')}
+          <p className="text-[10px] text-stone-400 italic">
+            This digital certificate represents verified on-chain cryptographic provenance data registered across the HoneyChain network.
           </p>
         </div>
       </div>
